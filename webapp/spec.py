@@ -9,7 +9,7 @@ from dateutil.parser import parse
 
 from flask import abort
 
-from settings import SERVICE_ACCOUNT_INFO
+from webapp.settings import SERVICE_ACCOUNT_INFO
 
 
 class GoogleDrive:
@@ -17,9 +17,8 @@ class GoogleDrive:
         scopes = [
             "https://www.googleapis.com/auth/drive.readonly",
         ]
-        service_account_info = SERVICE_ACCOUNT_INFO
         credentials = service_account.Credentials.from_service_account_info(
-            service_account_info, scopes=scopes
+            SERVICE_ACCOUNT_INFO, scopes=scopes
         )
         self.service = build(
             "drive", "v2", credentials=credentials, cache_discovery=False
