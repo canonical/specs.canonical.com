@@ -1,46 +1,9 @@
-import io
-
-from apiclient.http import MediaIoBaseDownload
-from bs4 import BeautifulSoup
-from google.oauth2 import service_account
-from googleapiclient.discovery import build
-
-from dateutil.parser import parse
-
 from flask import abort
+from dateutil.parser import parse
+from bs4 import BeautifulSoup
 
-from webapp.settings import SERVICE_ACCOUNT_INFO
 
-
-class GoogleDrive:
-    def __init__(self):
-        scopes = [
-            "https://www.googleapis.com/auth/drive.readonly",
-        ]
-        credentials = service_account.Credentials.from_service_account_info(
-            SERVICE_ACCOUNT_INFO, scopes=scopes
-        )
-        self.service = build(
-            "drive", "v2", credentials=credentials, cache_discovery=False
-        )
-
-    def doc_html(self, document_id):
-        request = self.service.files().export_media(
-            fileId=document_id, mimeType="text/html"
-        )
-        fh = io.BytesIO()
-        downloader = MediaIoBaseDownload(fh, request)
-        done = False
-        while done is False:
-            _, done = downloader.next_chunk()
-        html = fh.getvalue().decode("utf-8")
-        comments = (
-            self.service.comments()
-            .list(fileId=document_id)
-            .execute()
-            .get("items", [])
-        )
-        return html, comments
+from webapp.google import Drive
 
 
 class Spec:
@@ -55,9 +18,9 @@ class Spec:
     }
     url = "https://docs.google.com/document/d/"
 
-    def __init__(self, google_drive: GoogleDrive, document_id: str):
+    def __init__(self, google_drive: Drive, document_id: str):
         try:
-            raw_html, _ = google_drive.doc_html(document_id)
+            raw_html = google_drive.doc_html(document_id)
         except Exception as e:
             err = "Error. Document doesn't exist."
             print(f"{err}\n {e}")

@@ -5,9 +5,10 @@ from flask import render_template, jsonify, abort, redirect
 from canonicalwebteam.flask_base.app import FlaskBase
 
 from webapp.authors import parse_authors, unify_authors
-from webapp.spec import GoogleDrive, Spec
-from webapp.spreadsheet import get_sheet
+from webapp.spec import Spec
 from webapp.sso import init_sso
+from webapp.update import update_sheet
+from webapp.google import Drive, Sheets
 
 DEPLOYMENT_ID = os.getenv(
     "DEPLOYMENT_ID",
@@ -16,8 +17,11 @@ DEPLOYMENT_ID = os.getenv(
 SPECS_API = f"https://script.google.com/macros/s/{DEPLOYMENT_ID}/exec"
 
 SPREADSHEET_ID = "1jFj4z19cXZaPZcZk8nPTPmeO0zBbja5Bg23eXiZr9Pw"
-sheet = get_sheet()
-google_drive = GoogleDrive()
+
+spreadsheet = Sheets(
+    spreadsheet_id="1aKH6petyrzjzw0mgUNQscDhFSfVkbAIEjfH7YBS-bDA"
+)
+drive = Drive()
 
 app = FlaskBase(
     __name__,
@@ -31,6 +35,7 @@ init_sso(app)
 
 def get_value_row(row, type):
     if row:
+        print("row", row)
         if type == datetime:
             if "formattedValue" in row:
                 return datetime.strptime(
@@ -73,12 +78,12 @@ def _generate_specs():
         ("numberOfComments", int),
         ("openComments", int),
     ]
-    res = sheet.get(
-        spreadsheetId=SPREADSHEET_ID,
-        ranges=[f"{SHEET}!{RANGE}"],
-        includeGridData=True,
-    ).execute()
-    for row in res["sheets"][0]["data"][0]["rowData"]:
+
+    res = spreadsheet.get_sheet_by_title(
+        title="Specs", ranges=[f"{SHEET}!{RANGE}"]
+    )
+
+    for row in res["data"][0]["rowData"]:
         if "values" in row and is_spec(row["values"]):
             spec = {}
             for column_index in range(len(COLUMNS)):
@@ -119,7 +124,7 @@ def spec(spec_name):
 @app.route("/spec-details/<document_id>")
 def get_document(document_id):
     try:
-        spec = Spec(google_drive, document_id)
+        spec = Spec(drive, document_id)
     except Exception as e:
         err = "Error fetching document, try again."
         print(f"{err}\n {e}")
@@ -130,3 +135,11 @@ def get_document(document_id):
         "html": spec.html.encode("utf-8").decode(),
     }
     return jsonify(payload)
+
+
+@app.cli.command("update-spreadsheet")
+def update_spreadsheet():
+    """
+    Update the spreadsheet that contains specs information
+    """
+    update_sheet()
