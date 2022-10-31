@@ -8,12 +8,11 @@ SPECS_SHEET_TITLE = "Specs"
 TMP_SHEET_TITLE = "Specs_tmp"
 
 
-def _parse_top_table(document) -> dict:
+def _parse_top_table(document: dict) -> dict:
     """
     Parse the content of the table on top of the document,
     which contains spec metadata
     """
-
     allowed_keys = ("Index", "Title", "Status", "Authors", "Type", "Created")
 
     doc_content = document.get("body").get("content")
@@ -162,6 +161,7 @@ def update_sheet() -> None:
                 range=TMP_SHEET_TITLE,
             )
 
+    # Rename temporary file as the main one once it contains all the specs
     sheets.update_sheet_name(
         sheet_id=specs_sheet["properties"]["sheetId"], new_name="tmp"
     )

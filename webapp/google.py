@@ -9,6 +9,7 @@ from googleapiclient.discovery import build
 
 
 from webapp.settings import SERVICE_ACCOUNT_INFO
+from typing import List
 
 
 class Drive:
@@ -124,46 +125,36 @@ class Sheets:
         creds = service_account.Credentials.from_service_account_info(
             SERVICE_ACCOUNT_INFO, scopes=scopes
         )
-        self.service = build(
+        service = build(
             "sheets", "v4", credentials=creds, cache=DiscoveryCache()
         )
-
-    def append_row(
-        self,
-        rows,
-    ):
-        self.service.spreadsheets().values().append(
-            spreadsheetId=self.spreadsheet_id,
-            body={"values": rows},
-            ranges=self.title,
-            valueInputOption="RAW",
-        ).execute()
+        self.spreadsheets = service.spreadsheets()
 
     def _batch_update(self, body):
-        self.service.spreadsheets().batchUpdate(
+        self.spreadsheets.batchUpdate(
             spreadsheetId=self.spreadsheet_id, body=body
         ).execute()
 
-    def get_sheet_by_title(self, title, ranges=None):
-        spreadsheet = (
-            self.service.spreadsheets()
-            .get(
-                spreadsheetId=self.spreadsheet_id,
-                ranges=ranges,
-                includeGridData=True,
-            )
-            .execute()
-        )
+    def get_sheet_by_title(self, title, ranges=None) -> dict:
+        """
+        Return sheet with a given title
+        """
+        spreadsheet = self.spreadsheets.get(
+            spreadsheetId=self.spreadsheet_id,
+            ranges=ranges,
+            includeGridData=True,
+        ).execute()
 
-        sheet = next(
+        return next(
             s
             for s in spreadsheet["sheets"]
             if s["properties"]["title"] == title
         )
 
-        return sheet
-
-    def clear(self, sheet_id):
+    def clear(self, sheet_id: str) -> None:
+        """
+        Delete all content in a sheet
+        """
         body = {
             "requests": [
                 {
@@ -177,15 +168,21 @@ class Sheets:
 
         self._batch_update(body)
 
-    def insert_rows(self, rows, range):
-        self.service.spreadsheets().values().append(
+    def insert_rows(self, rows: List[List[str]], range: str) -> None:
+        """
+        Append rows to the end of the sheet
+        """
+        self.spreadsheets.values().append(
             spreadsheetId=self.spreadsheet_id,
             body={"values": rows},
             range=range,
             valueInputOption="RAW",
         ).execute()
 
-    def update_sheet_name(self, sheet_id, new_name):
+    def update_sheet_name(self, sheet_id: str, new_name: str) -> None:
+        """
+        Change name of a sheet
+        """
         body = {
             "requests": [
                 {

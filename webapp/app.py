@@ -16,11 +16,9 @@ DEPLOYMENT_ID = os.getenv(
 )
 SPECS_API = f"https://script.google.com/macros/s/{DEPLOYMENT_ID}/exec"
 
-SPREADSHEET_ID = "1jFj4z19cXZaPZcZk8nPTPmeO0zBbja5Bg23eXiZr9Pw"
+SPREADSHEET_ID = "1aKH6petyrzjzw0mgUNQscDhFSfVkbAIEjfH7YBS-bDA"
 
-spreadsheet = Sheets(
-    spreadsheet_id="1aKH6petyrzjzw0mgUNQscDhFSfVkbAIEjfH7YBS-bDA"
-)
+spreadsheet = Sheets(spreadsheet_id=SPREADSHEET_ID)
 drive = Drive()
 
 app = FlaskBase(
@@ -79,11 +77,11 @@ def _generate_specs():
         ("openComments", int),
     ]
 
-    res = spreadsheet.get_sheet_by_title(
-        title="Specs", ranges=[f"{SHEET}!{RANGE}"]
+    sheet = spreadsheet.get_sheet_by_title(
+        title=SHEET, ranges=[f"{SHEET}!{RANGE}"]
     )
 
-    for row in res["data"][0]["rowData"]:
+    for row in sheet["data"][0]["rowData"]:
         if "values" in row and is_spec(row["values"]):
             spec = {}
             for column_index in range(len(COLUMNS)):
@@ -140,6 +138,6 @@ def get_document(document_id):
 @app.cli.command("update-spreadsheet")
 def update_spreadsheet():
     """
-    Update the spreadsheet that contains specs information
+    Update the spreadsheet that contains the specs information
     """
     update_sheet()
