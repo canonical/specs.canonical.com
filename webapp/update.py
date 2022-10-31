@@ -1,5 +1,4 @@
 from webapp.google import Docs, Drive, Sheets
-from datetime import datetime
 
 
 TEAMS_FOLDER_ID = "19jxxVn_3n6ZAmFl3DReEVgZjxZnlky4X"
@@ -58,7 +57,7 @@ def _parse_top_table(document) -> dict:
     return table_metadata
 
 
-def get_folders(api, parent_id):
+def _get_folders(api, parent_id):
     """
     Get all folders inside a given one
     """
@@ -69,7 +68,7 @@ def get_folders(api, parent_id):
     return api.get_files(query=query, fields=("id", "name"))
 
 
-def get_files(api, parent_id):
+def _get_files(api, parent_id):
     """
     Get all documents in a given folder
     """
@@ -87,16 +86,6 @@ def get_files(api, parent_id):
             "webViewLink",
         ),
     )
-
-
-def format_datetime(d):
-    """
-    Turn a datetime from the format provided by the API
-    to the format being read by the front-end
-    """
-    parsed = datetime.strptime(d, "%Y-%m-%dT%H:%M:%S.%fZ")
-
-    return parsed.strftime("%m/%d/%Y %H:%M:%S")
 
 
 def update_sheet() -> None:
@@ -135,10 +124,10 @@ def update_sheet() -> None:
         range=TMP_SHEET_TITLE,
     )
 
-    folders = get_folders(api=drive, parent_id=TEAMS_FOLDER_ID)
+    folders = _get_folders(api=drive, parent_id=TEAMS_FOLDER_ID)
 
     for folder in folders:
-        files = get_files(api=drive, parent_id=folder["id"])
+        files = _get_files(api=drive, parent_id=folder["id"])
 
         for file in files:
             comments = drive.get_comments(
@@ -163,8 +152,8 @@ def update_sheet() -> None:
                 table_metadata.get("Status"),
                 table_metadata.get("Authors"),
                 table_metadata.get("Type"),
-                format_datetime(file["createdTime"]),
-                format_datetime(file["modifiedTime"]),
+                file["createdTime"],
+                file["modifiedTime"],
                 len(comments),
                 len(open_comments),
             ]
@@ -172,8 +161,6 @@ def update_sheet() -> None:
                 rows=[row],
                 range=TMP_SHEET_TITLE,
             )
-            print("New row added")
-            print(row)
 
     sheets.update_sheet_name(
         sheet_id=specs_sheet["properties"]["sheetId"], new_name="tmp"

@@ -39,7 +39,7 @@ def get_value_row(row, type):
         if type == datetime:
             if "formattedValue" in row:
                 return datetime.strptime(
-                    row["formattedValue"], "%m/%d/%Y %H:%M:%S"
+                    row["formattedValue"], "%Y-%m-%dT%H:%M:%S.%fZ"
                 ).strftime("%d %b %Y")
         elif "userEnteredValue" in row:
             if "stringValue" in row["userEnteredValue"]:
