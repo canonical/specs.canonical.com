@@ -1,0 +1,22 @@
+name: cronjob-update-spreadsheet
+schedule: "0 */2 * * *"
+image: prod-workplace-eng.docker-registry.canonical.com/cronjob-update-spreadsheet
+
+env:
+  - name: SENTRY_DSN
+    value: https://e38013698989400884cce7bd9d862af3@sentry.is.canonical.com//51
+
+  - name: SECRET_KEY
+  secretKeyRef:
+    key: hiring-canonical-com
+    name: secret-keys
+
+  - name: PRIVATE_KEY_ID
+    secretKeyRef:
+      key: private-key-id
+      name: specs-canonical-com
+
+  - name: PRIVATE_KEY
+    secretKeyRef:
+      key: private-key
+      name: specs-canonical-com
