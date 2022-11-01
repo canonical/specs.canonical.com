@@ -33,7 +33,6 @@ init_sso(app)
 
 def get_value_row(row, type):
     if row:
-        print("row", row)
         if type == datetime:
             if "formattedValue" in row:
                 return datetime.strptime(

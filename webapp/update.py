@@ -149,9 +149,9 @@ def update_sheet() -> None:
     )
     sheets.update_sheet_name(
         sheet_id=tmp_sheet["properties"]["sheetId"],
-        new_name=specs_sheet["properties"]["title"],
+        new_name=SPECS_SHEET_TITLE,
     )
     sheets.update_sheet_name(
         sheet_id=specs_sheet["properties"]["sheetId"],
-        new_name=tmp_sheet["properties"]["title"],
+        new_name=TMP_SHEET_TITLE,
     )
