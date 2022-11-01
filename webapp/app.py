@@ -9,6 +9,7 @@ from webapp.spec import Spec
 from webapp.sso import init_sso
 from webapp.update import update_sheet
 from webapp.google import Drive, Sheets
+from webapp.contants import TRACKER_SPREADSHEET_ID, SPECS_SHEET_TITLE
 
 DEPLOYMENT_ID = os.getenv(
     "DEPLOYMENT_ID",
@@ -16,9 +17,8 @@ DEPLOYMENT_ID = os.getenv(
 )
 SPECS_API = f"https://script.google.com/macros/s/{DEPLOYMENT_ID}/exec"
 
-SPREADSHEET_ID = "1aKH6petyrzjzw0mgUNQscDhFSfVkbAIEjfH7YBS-bDA"
 
-spreadsheet = Sheets(spreadsheet_id=SPREADSHEET_ID)
+spreadsheet = Sheets(spreadsheet_id=TRACKER_SPREADSHEET_ID)
 drive = Drive()
 
 app = FlaskBase(
@@ -59,7 +59,6 @@ def is_spec(row):
 
 
 def _generate_specs():
-    SHEET = "Specs"
     RANGE = "A2:M1000"
     COLUMNS = [
         ("folderName", str),
@@ -78,7 +77,7 @@ def _generate_specs():
     ]
 
     sheet = spreadsheet.get_sheet_by_title(
-        title=SHEET, ranges=[f"{SHEET}!{RANGE}"]
+        title=SPECS_SHEET_TITLE, ranges=[f"{SPECS_SHEET_TITLE}!{RANGE}"]
     )
 
     for row in sheet["data"][0]["rowData"]:

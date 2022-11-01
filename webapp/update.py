@@ -1,10 +1,8 @@
 from webapp.google import Docs, Drive, Sheets
+from webapp.contants import TRACKER_SPREADSHEET_ID, SPECS_SHEET_TITLE
 
 
 TEAMS_FOLDER_ID = "19jxxVn_3n6ZAmFl3DReEVgZjxZnlky4X"
-TRACKER_SPREADSHEET_ID = "1aKH6petyrzjzw0mgUNQscDhFSfVkbAIEjfH7YBS-bDA"
-
-SPECS_SHEET_TITLE = "Specs"
 TMP_SHEET_TITLE = "Specs_tmp"
 
 
@@ -39,52 +37,19 @@ def _parse_top_table(document: dict) -> dict:
                 # Some text appears as several items despite being clearly part
                 # of the same word. In that case, join it in a single string
                 table_metadata[key] = "".join(
-                    [v["textRun"]["content"] for v in values]
+                    v["textRun"]["content"] for v in values
                 )
             else:
                 # Generate a list of people
                 table_metadata[key] = "".join(
-                    [
-                        v["person"]["personProperties"]["name"].strip()
-                        for v in values
-                        if v.get("person")
-                    ]
+                    v["person"]["personProperties"]["name"].strip()
+                    for v in values
+                    if v.get("person")
                 )
 
         break
 
     return table_metadata
-
-
-def _get_folders(api, parent_id):
-    """
-    Get all folders inside a given one
-    """
-    query = (
-        f"mimeType = 'application/vnd.google-apps.folder' "
-        f"and '{parent_id}' in parents"
-    )
-    return api.get_files(query=query, fields=("id", "name"))
-
-
-def _get_files(api, parent_id):
-    """
-    Get all documents in a given folder
-    """
-    query = (
-        f"mimeType = 'application/vnd.google-apps.document' "
-        f"and '{parent_id}' in parents"
-    )
-    return api.get_files(
-        query=query,
-        fields=(
-            "id",
-            "name",
-            "createdTime",
-            "modifiedTime",
-            "webViewLink",
-        ),
-    )
 
 
 def update_sheet() -> None:
@@ -123,10 +88,27 @@ def update_sheet() -> None:
         range=TMP_SHEET_TITLE,
     )
 
-    folders = _get_folders(api=drive, parent_id=TEAMS_FOLDER_ID)
+    query_subfolders = (
+        f"mimeType = 'application/vnd.google-apps.folder' "
+        f"and '{TEAMS_FOLDER_ID}' in parents"
+    )
+    folders = drive.get_files(query=query_subfolders, fields=("id", "name"))
 
     for folder in folders:
-        files = _get_files(api=drive, parent_id=folder["id"])
+        query_doc_files = (
+            f"mimeType = 'application/vnd.google-apps.document' "
+            f"and '{folder['id']}' in parents"
+        )
+        files = drive.get_files(
+            query=query_doc_files,
+            fields=(
+                "id",
+                "name",
+                "createdTime",
+                "modifiedTime",
+                "webViewLink",
+            ),
+        )
 
         for file in files:
             comments = drive.get_comments(
