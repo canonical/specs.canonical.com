@@ -7,9 +7,9 @@ env:
     value: https://e38013698989400884cce7bd9d862af3@sentry.is.canonical.com//51
 
   - name: SECRET_KEY
-  secretKeyRef:
-    key: hiring-canonical-com
-    name: secret-keys
+    secretKeyRef:
+      key: hiring-canonical-com
+      name: secret-keys
 
   - name: PRIVATE_KEY_ID
     secretKeyRef:
