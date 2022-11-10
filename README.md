@@ -2,6 +2,11 @@
 
 A simple website to visualise Canonical specification documents stored in Google Drive. It allows filtering by different categories (status, team, etc.) as well as seeing a preview of the document. 
 
+## Bugs and issues
+
+If you have found a bug on the site or have an idea for a new feature, feel free to create a new issue, or suggest a fix by creating a pull request.
+
+
 ## Local development
 
 The simplest way to run the site locally is using [dotrun](https://github.com/canonical/dotrun).
