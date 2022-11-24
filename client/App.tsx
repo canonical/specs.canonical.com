@@ -51,6 +51,12 @@ function App({ specs, teams }: { specs: Spec[]; teams: Team[] }) {
           height: "19",
           url: "/",
         }}
+        itemsRight={[
+          {
+            url: "https://docs.google.com/document/d/1o0uqbarAch4guwXZhLpv04DK18J9704L_p7fzAdE6CE/edit#heading=h.31hys4te5m58",
+            label: "Add a new spec",
+          },
+        ]}
         theme={Theme.DARK}
       />
       <main className="l-fluid-breakout" id="main">
