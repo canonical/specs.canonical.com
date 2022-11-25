@@ -54,7 +54,7 @@ function App({ specs, teams }: { specs: Spec[]; teams: Team[] }) {
         itemsRight={[
           {
             url: "https://docs.google.com/document/d/1o0uqbarAch4guwXZhLpv04DK18J9704L_p7fzAdE6CE/edit#heading=h.31hys4te5m58",
-            label: "Add a new spec",
+            label: "How to add a new spec",
           },
         ]}
         theme={Theme.DARK}
