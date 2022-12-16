@@ -41,7 +41,7 @@ def _parse_top_table(document: dict) -> dict:
                 )
             else:
                 # Generate a list of people
-                table_metadata[key] = "".join(
+                table_metadata[key] = ", ".join(
                     v["person"]["personProperties"]["name"].strip()
                     for v in values
                     if v.get("person")
