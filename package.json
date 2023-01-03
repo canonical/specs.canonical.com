@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@canonical/react-components": "0.37.8",
-    "autoprefixer": "10.4.1",
+    "autoprefixer": "10.4.13",
     "clsx": "^1.2.1",
     "concurrently": "^7.1.0",
     "focus-trap-react": "10.0.2",
@@ -22,7 +22,7 @@
     "qs": "^6.11.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "sass": "1.42.1",
+    "sass": "1.57.1",
     "vanilla-framework": "3.9.0"
   },
   "devDependencies": {
