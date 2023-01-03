@@ -73,23 +73,6 @@ class Drive:
         return files
 
 
-class Docs:
-    """
-    Methods to interact with document
-    """
-
-    def __init__(self):
-        scopes = ["https://www.googleapis.com/auth/documents.readonly"]
-        service_account_info = SERVICE_ACCOUNT_INFO
-        creds = service_account.Credentials.from_service_account_info(
-            service_account_info, scopes=scopes
-        )
-        self.service = build("docs", "v1", credentials=creds)
-
-    def get_document(self, doc_id):
-        return self.service.documents().get(documentId=doc_id).execute()
-
-
 class DiscoveryCache:
     """
     Unix file-based cache for use with the API Discovery service
