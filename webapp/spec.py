@@ -24,19 +24,17 @@ spec_types = (
 
 
 class Spec:
-    html: BeautifulSoup
-    metadata = {
-        "index": "",
-        "title": "",
-        "status": "",
-        "authors": [],
-        "type": "",
-        "created": "",
-    }
-    url = "https://docs.google.com/document/d/"
-
     def __init__(self, google_drive: Drive, document_id: str):
         self.document_id = document_id
+        self.url = f"https://docs.google.com/document/d/{document_id}"
+        self.metadata = {
+            "index": "",
+            "title": "",
+            "status": "",
+            "authors": [],
+            "type": "",
+            "created": "",
+        }
 
         try:
             raw_html = google_drive.doc_html(document_id)
@@ -44,7 +42,6 @@ class Spec:
             err = "Error. Document doesn't exist."
             print(f"{err}\n {e}")
             abort(404, description=err)
-        self.url = f"{self.url}/{document_id}"
         self.html = BeautifulSoup(raw_html, features="lxml")
         self.clean()
         self.parse_metadata()
