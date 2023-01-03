@@ -74,8 +74,7 @@ def update_sheet() -> None:
             try:
                 parsed_doc = Spec(google_drive=drive, document_id=file["id"])
             except Exception as e:
-                print(f"Unable to parse document: {file['name']}")
-                print(e)
+                print(f"Unable to parse document: {file['name']}", e)
                 continue
 
             row = [

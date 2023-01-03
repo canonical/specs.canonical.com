@@ -7,11 +7,13 @@ from webapp.google import Drive
 
 
 specs_status = (
-    "approved",
-    "pending review",
-    "drafting",
     "braindump",
-    "unknown",
+    "drafting",
+    "pending review",
+    "approved",
+    "rejected",
+    "completed",
+    "obsolete",
 )
 
 spec_types = (
