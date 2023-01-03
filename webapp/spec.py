@@ -6,6 +6,21 @@ from bs4 import BeautifulSoup
 from webapp.google import Drive
 
 
+specs_status = (
+    "approved",
+    "pending review",
+    "drafting",
+    "braindump",
+    "unknown",
+)
+
+spec_types = (
+    "standard",
+    "informational",
+    "process",
+)
+
+
 class Spec:
     html: BeautifulSoup
     metadata = {
@@ -19,6 +34,8 @@ class Spec:
     url = "https://docs.google.com/document/d/"
 
     def __init__(self, google_drive: Drive, document_id: str):
+        self.document_id = document_id
+
         try:
             raw_html = google_drive.doc_html(document_id)
         except Exception as e:
@@ -39,6 +56,7 @@ class Spec:
 
     def parse_metadata(self):
         table = self.html.select_one("table")
+
         for table_row in table.select("tr"):
             cells = table_row.select("td")
             # invalid format | name | value |, ignoring the row
@@ -47,19 +65,13 @@ class Spec:
             attr_name, attr_value = cells
             attr_name = attr_name.text.lower().strip()
             attr_value = attr_value.text.strip()
-            attr_value_lower_case = attr_value.lower()
+
             if attr_name in self.metadata:
                 if attr_name in ["index", "title"]:
                     self.metadata[attr_name] = attr_value
                 elif attr_name == "status":
-                    if attr_value_lower_case in [
-                        "approved",
-                        "pending review",
-                        "drafting",
-                        "braindump",
-                        "unknown",
-                    ]:
-                        self.metadata["status"] = attr_value_lower_case
+                    if attr_value.lower() in specs_status:
+                        self.metadata["status"] = attr_value
                     else:
                         self.metadata["status"] = "unknown"
                 elif attr_name == "authors":
@@ -67,16 +79,17 @@ class Spec:
                         author.strip() for author in attr_value.split(",")
                     ]
                 elif attr_name == "type":
-                    if attr_value_lower_case in [
-                        "standard",
-                        "informational",
-                        "process",
-                    ]:
-                        self.metadata["type"] = attr_value_lower_case
+                    if attr_value.lower() in spec_types:
+                        self.metadata["type"] = attr_value
                     else:
                         self.metadata["type"] = "unknown"
                 elif attr_name == "created":
-                    self.metadata["created"] = parse(
-                        attr_value_lower_case, fuzzy=True
-                    )
+                    try:
+                        self.metadata["created"] = parse(
+                            attr_value, fuzzy=True
+                        )
+                    except Exception as e:
+                        print(e)
+                        self.metadata["created"] = "unknown"
+
         table.decompose()

@@ -9,13 +9,7 @@ from webapp.spec import Spec
 from webapp.sso import init_sso
 from webapp.update import update_sheet
 from webapp.google import Drive, Sheets
-from webapp.contants import TRACKER_SPREADSHEET_ID, SPECS_SHEET_TITLE
-
-DEPLOYMENT_ID = os.getenv(
-    "DEPLOYMENT_ID",
-    "AKfycbw5ph73HX2plnYE1Q03K7M8BQhlrp12Dck27bukPWCbXzBdRgP1N456fPiipR9J2H7q",
-)
-SPECS_API = f"https://script.google.com/macros/s/{DEPLOYMENT_ID}/exec"
+from webapp.settings import TRACKER_SPREADSHEET_ID, SPECS_SHEET_TITLE
 
 
 spreadsheet = Sheets(spreadsheet_id=TRACKER_SPREADSHEET_ID)
