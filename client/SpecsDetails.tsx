@@ -33,11 +33,18 @@ const SpecsDetails: React.FC<SpecDetailsProps> = ({
         const response = await fetch(
           `${location.origin}/spec-details/${fileID}`
         );
-        const specDetails = await response.json();
+        let specDetail = await response.json();
         if (response.ok) {
-          setSpecDetails(specDetails);
+          specDetail = {
+            ...specDetail,
+            metadata: {
+              ...specDetail.metadata,
+              status: specDetail.metadata.status?.toLowerCase(),
+            },
+          };
+          setSpecDetails(specDetail);
         } else {
-          setError(specDetails.message);
+          setError(specDetail.message);
         }
       } catch {
         setError("Error. Something went wrong.");
@@ -114,9 +121,8 @@ const SpecsDetails: React.FC<SpecDetailsProps> = ({
                           specDetails.metadata.status === "approved" ||
                           specDetails.metadata.status === "completed" ||
                           specDetails.metadata.status === "active",
-                        "p-status-label--caution": specDetails.metadata.status
-                          ?.toLowerCase()
-                          ?.startsWith("pending"),
+                        "p-status-label--caution":
+                          specDetails.metadata.status?.startsWith("pending"),
                         "p-status-label":
                           specDetails.metadata.status === "drafting" ||
                           specDetails.metadata.status === "braindump",
