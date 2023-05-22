@@ -14,7 +14,6 @@ from webapp.settings import TRACKER_SPREADSHEET_ID, SPECS_SHEET_TITLE
 
 CACHE_TTL = 60 * 30
 
-spreadsheet = Sheets(spreadsheet_id=TRACKER_SPREADSHEET_ID)
 drive = Drive()
 
 app = FlaskBase(
@@ -56,6 +55,7 @@ def is_spec(row):
 # Cache for 30 minutes
 @cached(cache=TTLCache(maxsize=128, ttl=CACHE_TTL))
 def get_sheet_by_title(RANGE):
+    spreadsheet = Sheets(spreadsheet_id=TRACKER_SPREADSHEET_ID)
     sheet = spreadsheet.get_sheet_by_title(
         title=SPECS_SHEET_TITLE, ranges=[f"{SPECS_SHEET_TITLE}!{RANGE}"]
     )
