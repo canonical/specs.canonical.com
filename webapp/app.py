@@ -56,9 +56,12 @@ def is_spec(row):
 # Cache for 30 minutes
 @cached(cache=TTLCache(maxsize=128, ttl=CACHE_TTL))
 def get_sheet_by_title(RANGE):
-    return spreadsheet.get_sheet_by_title(
+    sheet = spreadsheet.get_sheet_by_title(
         title=SPECS_SHEET_TITLE, ranges=[f"{SPECS_SHEET_TITLE}!{RANGE}"]
     )
+    spreadsheet.close()
+
+    return sheet
 
 
 def _generate_specs():
@@ -134,6 +137,8 @@ def get_document(document_id):
         "url": spec.url,
         "html": spec.html.encode("utf-8").decode(),
     }
+    drive.close()
+    
     return jsonify(payload)
 
 

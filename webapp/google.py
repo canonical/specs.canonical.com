@@ -71,6 +71,9 @@ class Drive:
                 break
 
         return files
+    
+    def close(self):
+        self.service.close()
 
 
 class DiscoveryCache:
@@ -111,6 +114,7 @@ class Sheets:
         service = build(
             "sheets", "v4", credentials=creds, cache=DiscoveryCache()
         )
+        self.service = service
         self.spreadsheets = service.spreadsheets()
 
     def _batch_update(self, body):
@@ -181,3 +185,6 @@ class Sheets:
         }
 
         self._batch_update(body)
+
+    def close(self):
+        self.service.close()
