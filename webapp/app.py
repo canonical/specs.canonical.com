@@ -1,6 +1,6 @@
 import json
+import copy 
 
-from datetime import datetime
 
 from flask import render_template, jsonify, abort, redirect
 from canonicalwebteam.flask_base.app import FlaskBase
@@ -26,15 +26,14 @@ app = FlaskBase(
 
 init_sso(app)
 
-with open("specs.json", "r") as f:
+with open("specs.json") as f:
     all_specs = json.load(f)
-    
 
 @app.route("/")
 def index():
     specs = []
     teams = set()
-    for spec in all_specs:
+    for spec in copy.deepcopy(all_specs):
         spec["authors"] = parse_authors(spec["authors"])
         if spec["folderName"]:
             teams.add(spec["folderName"])
@@ -78,3 +77,11 @@ def update_spreadsheet():
     Update the spreadsheet that contains the specs information
     """
     update_sheet()
+
+
+@app.route("/test")
+def test():
+    for a in all_specs:
+        print(a["authors"], type(a["authors"]))
+
+    return "ok"
