@@ -1,3 +1,5 @@
+import json
+
 from datetime import datetime
 
 from flask import render_template, jsonify, abort, redirect
@@ -9,12 +11,10 @@ from webapp.authors import parse_authors, unify_authors
 from webapp.spec import Spec
 from webapp.sso import init_sso
 from webapp.update import update_sheet
-from webapp.google import Drive, Sheets
-from webapp.settings import TRACKER_SPREADSHEET_ID, SPECS_SHEET_TITLE
+from webapp.google import Drive
 
 CACHE_TTL = 60 * 30
 
-spreadsheet = Sheets(spreadsheet_id=TRACKER_SPREADSHEET_ID)
 drive = Drive()
 
 app = FlaskBase(
@@ -26,80 +26,15 @@ app = FlaskBase(
 
 init_sso(app)
 
-
-def get_value_row(row, type):
-    if row:
-        if type == datetime:
-            if "formattedValue" in row:
-                return datetime.strptime(
-                    row["formattedValue"], "%Y-%m-%dT%H:%M:%S.%fZ"
-                ).strftime("%d %b %Y")
-        elif "userEnteredValue" in row:
-            if "stringValue" in row["userEnteredValue"]:
-                return type(row["userEnteredValue"]["stringValue"])
-            if "numberValue" in row["userEnteredValue"]:
-                return type(row["userEnteredValue"]["numberValue"])
-
-    return ""
-
-
-def index_in_list(a_list, index):
-    return index < len(a_list)
-
-
-def is_spec(row):
-    """Check that file name exists."""
-
-    return "userEnteredValue" in row[1]
-
-
-# Cache for 30 minutes
-@cached(cache=TTLCache(maxsize=128, ttl=CACHE_TTL))
-def get_sheet_by_title(RANGE):
-    return spreadsheet.get_sheet_by_title(
-        title=SPECS_SHEET_TITLE, ranges=[f"{SPECS_SHEET_TITLE}!{RANGE}"]
-    )
-
-
-def _generate_specs():
-    RANGE = "A2:M"
-    COLUMNS = [
-        ("folderName", str),
-        ("fileName", str),
-        ("fileID", str),
-        ("fileURL", str),
-        ("index", str),
-        ("title", str),
-        ("status", str),
-        ("authors", str),
-        ("type", str),
-        ("created", datetime),
-        ("lastUpdated", datetime),
-        ("numberOfComments", int),
-        ("openComments", int),
-    ]
-
-    sheet = get_sheet_by_title(RANGE)
-
-    for row in sheet["data"][0]["rowData"]:
-        if "values" in row and is_spec(row["values"]):
-            spec = {}
-            for column_index in range(len(COLUMNS)):
-                (column, type) = COLUMNS[column_index]
-                spec[column] = get_value_row(
-                    row["values"][column_index]
-                    if index_in_list(row["values"], column_index)
-                    else None,
-                    type,
-                )
-            yield spec
-
+with open("specs.json", "r") as f:
+    all_specs = json.load(f)
+    
 
 @app.route("/")
 def index():
     specs = []
     teams = set()
-    for spec in _generate_specs():
+    for spec in all_specs:
         spec["authors"] = parse_authors(spec["authors"])
         if spec["folderName"]:
             teams.add(spec["folderName"])
@@ -112,7 +47,7 @@ def index():
 
 @app.route("/spec/<spec_name>")
 def spec(spec_name):
-    for spec in _generate_specs():
+    for spec in all_specs:
         if spec_name.upper() == spec["index"]:
             return redirect(spec["fileURL"])
     else:

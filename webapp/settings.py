@@ -2,7 +2,7 @@ import os
 
 
 PRIVATE_KEY_ID = os.getenv("PRIVATE_KEY_ID")
-PRIVATE_KEY = os.getenv("PRIVATE_KEY")
+PRIVATE_KEY = os.getenv("PRIVATE_KEY").replace("\\n", "\n")
 SERVICE_ACCOUNT_INFO = {
     "type": "service_account",
     "project_id": "roadmap-270011",
