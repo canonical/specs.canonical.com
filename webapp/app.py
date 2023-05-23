@@ -1,6 +1,6 @@
-import json
 import copy 
-
+import json
+import os
 
 from flask import render_template, jsonify, abort, redirect
 from canonicalwebteam.flask_base.app import FlaskBase
@@ -26,8 +26,11 @@ app = FlaskBase(
 
 init_sso(app)
 
-with open("specs.json") as f:
-    all_specs = json.load(f)
+SPECS_FILE = "specs.json"
+if os.path.exists(SPECS_FILE):
+    with open(SPECS_FILE) as f:
+        all_specs = json.load(f)
+
 
 @app.route("/")
 def index():
