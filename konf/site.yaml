@@ -2,6 +2,8 @@ domain: specs.canonical.com
 
 image: prod-comms.docker-registry.canonical.com/specs.canonical.com
 
+memoryLimit: 512Mi
+
 env:
   - name: SENTRY_DSN
     value: https://e38013698989400884cce7bd9d862af3@sentry.is.canonical.com//51
