@@ -2,6 +2,9 @@
 
 set -e
 
+# Build specs.json file after env vars are set
+python3 -m webapp.build_specs
+
 RUN_COMMAND="talisker.gunicorn.gevent webapp.app:app --bind $1 --worker-class gevent --name talisker-`hostname`"
 
 if [ "${FLASK_DEBUG}" = true ] || [ "${FLASK_DEBUG}" = 1 ]; then
