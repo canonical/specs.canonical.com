@@ -69,14 +69,6 @@ const SpecCard = ({ spec }: { spec: Spec }) => {
             <small>
               <em>{spec.authors.join(", ")}</em>
             </small>
-            <p className="p-card__content">
-              <i className="p-icon--comments">Comments</i>
-              <small className="u-text--muted">
-                {` ${spec.numberOfComments} comments ${
-                  spec.openComments > 0 ? `${spec.openComments} unresolved` : ""
-                }`}
-              </small>
-            </p>
           </div>
           <div className="spec-card__footer p-card__inner">
             <em className="u-align--right">{lastEdited}</em>

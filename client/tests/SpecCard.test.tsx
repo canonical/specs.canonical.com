@@ -12,8 +12,6 @@ describe("renders spec card component", () => {
   it("displays spec details on the card", () => {
     const specTitle = screen.getByText("test_title");
     expect(specTitle).toBeInTheDocument();
-    const comments = screen.getByText("10 comments 5 unresolved");
-    expect(comments).toBeInTheDocument();
     const specIndex = screen.getByText("AB123");
     expect(specIndex).toBeInTheDocument();
     const specStatus = screen.getByText("active");

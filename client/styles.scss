@@ -3,7 +3,6 @@ $increase-font-size-on-larger-screens: false;
 
 @import "vanilla-framework";
 @include vanilla;
-@include vf-p-icon-comments;
 
 main {
   padding-bottom: $spv--strip-regular;
