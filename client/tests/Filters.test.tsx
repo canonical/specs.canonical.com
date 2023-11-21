@@ -57,9 +57,11 @@ describe("renders filter component", () => {
     const sortOption1 = screen.getByText("Last modified") as HTMLOptionElement;
     const sortOption2 = screen.getByText("Name") as HTMLOptionElement;
     const sortOption3 = screen.getByText("Spec index") as HTMLOptionElement;
+    const sortOption4 = screen.getByText("Create date") as HTMLOptionElement;
     expect(sortOption1.selected).toBeTruthy();
     expect(sortOption2.selected).toBeFalsy();
     expect(sortOption3.selected).toBeFalsy();
+    expect(sortOption4.selected).toBeFalsy();
   });
 
   it("checks a spec status and type", () => {
