@@ -93,6 +93,7 @@ const Filters = ({
         id="sortBy"
         options={[
           { value: "date", label: "Last modified" },
+          { value: "created", label: "Create date" },
           { value: "name", label: "Name" },
           { value: "index", label: "Spec index" },
         ]}

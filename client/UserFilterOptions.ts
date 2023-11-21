@@ -52,6 +52,8 @@ export function useFilteredAndSortedSpecs(specs: Spec[]) {
     if (by === "date") {
       key = "lastUpdated";
       direction = -1;
+    } else if (by === "created") {
+      key = "created";
     } else if (by === "name") {
       key = "title";
     } else if (by === "index") {
