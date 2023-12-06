@@ -20,6 +20,7 @@ def get_value_row(row, type):
 
     return ""
 
+
 def index_in_list(a_list, index):
     return index < len(a_list)
 
