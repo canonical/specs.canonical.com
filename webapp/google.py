@@ -118,6 +118,20 @@ class Sheets:
             spreadsheetId=self.spreadsheet_id, body=body
         ).execute()
 
+    def ensure_sheet_by_title(self, title, *args, **kwargs) -> dict:
+        """
+        Returns an existing sheet matching the title if it can be found, else create it.
+        """
+        try:
+            return self.get_sheet_by_title(title, *args, **kwargs)
+        except StopIteration:
+            # no sheet found with that name
+            body = {
+                "requests": [{"addSheet": {"properties": {"title": title}}}]
+            }
+            self._batch_update(body)
+            return self.get_sheet_by_title(title, *args, **kwargs)
+
     def get_sheet_by_title(self, title, ranges=None) -> dict:
         """
         Return sheet with a given title

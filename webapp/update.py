@@ -17,7 +17,7 @@ def update_sheet() -> None:
     sheets = Sheets(spreadsheet_id=TRACKER_SPREADSHEET_ID)
 
     specs_sheet = sheets.get_sheet_by_title(SPECS_SHEET_TITLE)
-    tmp_sheet = sheets.get_sheet_by_title(TMP_SHEET_TITLE)
+    tmp_sheet = sheets.ensure_sheet_by_title(TMP_SHEET_TITLE)
 
     sheets.clear(sheet_id=tmp_sheet["properties"]["sheetId"])
 
