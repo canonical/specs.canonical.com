@@ -1,3 +1,5 @@
+from typing import List, Dict
+
 import tenacity
 
 from webapp.google import Drive, Sheets
@@ -23,7 +25,7 @@ except ImportError:
             yield batch
 
 
-def _generate_spec_rows_for_folders(drive: Drive, folders: list[dict]):
+def _generate_spec_rows_for_folders(drive: Drive, folders: List[Dict]):
     for folder in folders:
         query_doc_files = (
             f"mimeType = 'application/vnd.google-apps.document' "
