@@ -5,8 +5,15 @@ import SpecCard from "./SpecCard";
 import { Spec, Team } from "./types";
 import { useFilteredAndSortedSpecs } from "./UserFilterOptions";
 import { sortSet } from "./utils";
+import SpecCardsList from "./SpecCardsList";
 
-export const specTypes = new Set(["Implementation", "Product Requirement", "Standard", "Informational", "Process"]);
+export const specTypes = new Set([
+  "Implementation",
+  "Product Requirement",
+  "Standard",
+  "Informational",
+  "Process",
+]);
 export const specStatuses = new Set([
   "active",
   "approved",
@@ -89,15 +96,7 @@ function App({ specs, teams }: { specs: Spec[]; teams: Team[] }) {
             defaultOptions={filter}
           />
         </div>
-        <div className="l-fluid-breakout__main" id="cards">
-          {filteredSpecs.length ? (
-            filteredSpecs.map((spec, i) => <SpecCard key={i} spec={spec} />)
-          ) : (
-            <h2 id="no-results" className="u-hide u-align-text--center">
-              No specs found
-            </h2>
-          )}
-        </div>
+        <SpecCardsList specs={filteredSpecs} />
       </main>
       <footer className="p-strip is-shallow">
         <div className="row">

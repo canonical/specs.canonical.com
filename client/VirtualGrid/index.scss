@@ -1,0 +1,11 @@
+.ReactVirtualized__container {
+  flex: 1;
+  > div {
+    height: unset !important;
+  }
+
+  .ReactVirtualized__Grid,
+  .ReactVirtualized__Grid__innerScrollContainer {
+    overflow: visible !important;
+  }
+}
