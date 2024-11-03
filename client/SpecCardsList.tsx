@@ -28,11 +28,15 @@ const SpecCardsList = ({ specs }: SpecCardsListProps) => {
         itemHeight={270}
         itemMinWidth={400}
         gridSpace={6}
-        renderItem={(props: VirtualizedGridItemProps<Spec>) => (
-          <div>
-            <SpecCard spec={specs[props.index]} style={props.style} />
-          </div>
-        )}
+        renderItem={(props: VirtualizedGridItemProps<Spec>) =>
+          specs[props.index] ? (
+            <div>
+              <SpecCard spec={specs[props.index]} style={props.style} />
+            </div>
+          ) : (
+            <></>
+          )
+        }
       />
     </div>
   );
