@@ -25,9 +25,9 @@ const SpecCardsList = ({ specs }: SpecCardsListProps) => {
     >
       <VirtualizedGrid
         items={specs}
-        itemHeight={270}
+        itemHeight={230}
         itemMinWidth={400}
-        gridSpace={6}
+        gridSpace={16}
         renderItem={(props: VirtualizedGridItemProps<Spec>) =>
           specs[props.index] ? (
             <div>

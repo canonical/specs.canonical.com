@@ -24,7 +24,7 @@ const SpecCard = ({
     <>
       <div data-js="grid-item" style={style}>
         <div
-          className={`spec-card spec-card--${spec.status.toLowerCase()} p-card col-4`}
+          className={`spec-card spec-card--${spec.status.toLowerCase()} p-card col-4 u-no-padding`}
         >
           <div className="spec-card__content p-card__inner">
             <div className="spec-card__header">

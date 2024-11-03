@@ -82,6 +82,12 @@ function VirtualizedGrid<ItemType>({
                   scrollTop={scrollTop}
                   onScroll={onChildScroll}
                   cellRenderer={(props: GridCellProps) => {
+                    const isLastColumn = props.columnIndex === columnCount - 1;
+                    const isLastRow = props.rowIndex === rowCount - 1;
+                    const isLastItem =
+                      props.rowIndex * columnCount + props.columnIndex >=
+                      items.length - 1;
+
                     const fullProps: VirtualizedGridItemProps<ItemType> = {
                       ...props,
                       items,
@@ -91,7 +97,11 @@ function VirtualizedGrid<ItemType>({
                         ...props.style,
                         width: itemWidth,
                         height: itemHeight,
-                        padding: `0 ${gridSpace}px ${gridSpace}px 0`,
+                        marginRight: !isLastColumn ? gridSpace : 0,
+                        marginBottom: !isLastRow && !isLastItem ? gridSpace : 0,
+                        left: props.style.left as number,
+                        top: props.style.top as number,
+                        position: "absolute",
                       },
                     };
                     return renderItem(fullProps);
@@ -105,4 +115,5 @@ function VirtualizedGrid<ItemType>({
     </div>
   );
 }
+
 export default VirtualizedGrid;
