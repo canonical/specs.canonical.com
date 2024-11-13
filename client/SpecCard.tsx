@@ -1,15 +1,9 @@
-import clsx from "clsx";
 import React, { useState } from "react";
-import SpecsDetails from "./SpecsDetails";
+import clsx from "clsx";
 import { Spec } from "./types";
+import SpecsDetails from "./SpecsDetails";
 
-const SpecCard = ({
-  spec,
-  style,
-}: {
-  spec: Spec;
-  style: React.CSSProperties;
-}) => {
+const SpecCard = ({ spec }: { spec: Spec }) => {
   const [viewSpecsDetails, setViewSpecsDetails] = useState<boolean>(false);
   const lastEdited = `Last edit: ${spec.lastUpdated.toLocaleDateString(
     "en-GB",
@@ -22,7 +16,7 @@ const SpecCard = ({
 
   return (
     <>
-      <div data-js="grid-item" style={style}>
+      <div className="l-fluid-breakout__item" data-js="grid-item">
         <div
           className={`spec-card spec-card--${spec.status.toLowerCase()} p-card col-4 u-no-padding`}
         >
