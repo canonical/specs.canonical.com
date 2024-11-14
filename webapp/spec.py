@@ -110,7 +110,7 @@ class Spec:
                 try:
                     self.metadata["created"] = parse(attr_value, fuzzy=True)
                 except Exception as e:
-                    logger.error(exc_info=e)
+                    logger.error("Unable to parse date", exc_info=e)
                     self.metadata["created"] = "unknown"
 
         table.decompose()
