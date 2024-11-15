@@ -133,8 +133,8 @@ def update_sheet() -> None:
     drive = Drive()
     sheets = Sheets(spreadsheet_id=TRACKER_SPREADSHEET_ID)
 
-    specs_sheet = sheets.get_sheet_by_title(SPECS_SHEET_TITLE)
-    tmp_sheet = sheets.ensure_sheet_by_title(TMP_SHEET_TITLE)
+    specs_sheet = sheets.ensure_sheet_by_title(SPECS_SHEET_TITLE)
+    tmp_sheet_id = create_tmp_sheet(sheets)
 
     save_specs_locally()
 
@@ -146,7 +146,6 @@ def update_sheet() -> None:
         """Helper to retry extending the TMP_SHEET."""
         return sheets.insert_rows(rows, range=TMP_SHEET_TITLE)
 
-    sheets.clear(sheet_id=tmp_sheet["properties"]["sheetId"])
     # Add headers
     _append_rows(
         rows=[
@@ -200,15 +199,28 @@ def update_sheet() -> None:
     elapsed_time_seconds = (datetime.datetime.now() - start_time).seconds
     logger.info("Updated the sheet in %s seconds", elapsed_time_seconds)
 
-    # Rename temporary file as the main one once it contains all the specs
+    # delete the current main source sheet
+    sheets.delete_sheets([specs_sheet["properties"]["sheetId"]])
+
+    # rename the temporary sheet to the main source sheet
     sheets.update_sheet_name(
-        sheet_id=specs_sheet["properties"]["sheetId"], new_name="tmp"
-    )
-    sheets.update_sheet_name(
-        sheet_id=tmp_sheet["properties"]["sheetId"],
+        sheet_id=tmp_sheet_id,
         new_name=SPECS_SHEET_TITLE,
     )
-    sheets.update_sheet_name(
-        sheet_id=specs_sheet["properties"]["sheetId"],
-        new_name=TMP_SHEET_TITLE,
-    )
+
+
+def create_tmp_sheet(sheets) -> str:
+    """Function to create a temporary sheet.
+
+    Validate if the `TMP_SHEET_TITLE` exists, if yes, delete.
+    Create a new sheet with name `TMP_SHEET_TITLE`.
+
+    Returns:
+        ID of the `TMP_SHEET_TITLE` sheet
+    """
+    tmp_sheet = sheets.get_sheet_by_title(TMP_SHEET_TITLE)
+    if tmp_sheet:
+        sheets.delete_sheets([tmp_sheet["properties"]["sheetId"]])
+    tmp_sheet = sheets.create_sheet(TMP_SHEET_TITLE)
+    tmp_sheet_id = tmp_sheet["properties"]["sheetId"]
+    return tmp_sheet_id

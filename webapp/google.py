@@ -115,9 +115,10 @@ class Sheets:
         self.spreadsheets = service.spreadsheets()
 
     def _batch_update(self, body):
-        self.spreadsheets.batchUpdate(
+        response = self.spreadsheets.batchUpdate(
             spreadsheetId=self.spreadsheet_id, body=body
         ).execute()
+        return response
 
     def ensure_sheet_by_title(self, title, *args, **kwargs) -> dict:
         """
@@ -128,10 +129,7 @@ class Sheets:
             return self.get_sheet_by_title(title, *args, **kwargs)
         except StopIteration:
             # no sheet found with that name
-            body = {
-                "requests": [{"addSheet": {"properties": {"title": title}}}]
-            }
-            self._batch_update(body)
+            self.create_sheet(title)
             return self.get_sheet_by_title(title, *args, **kwargs)
 
     def get_sheet_by_title(self, title, ranges=None) -> dict:
@@ -149,6 +147,24 @@ class Sheets:
             for s in spreadsheet["sheets"]
             if s["properties"]["title"] == title
         )
+
+    def delete_sheets(self, sheet_ids_to_delete: list):
+        sheets = []
+        for sheet_id in sheet_ids_to_delete:
+            sheets.append({"deleteSheet": {"sheetId": sheet_id}})
+
+        delete_sheet_requests = {"requests": sheets}
+        self._batch_update(body=delete_sheet_requests)
+
+    def create_sheet(self, sheet_title: str) -> str:
+        add_sheet_request = {
+            "requests": [{"addSheet": {"properties": {"title": sheet_title}}}]
+        }
+
+        response = self._batch_update(add_sheet_request)
+
+        new_sheet = response["replies"][0]["addSheet"]
+        return new_sheet
 
     def clear(self, sheet_id: str) -> None:
         """
