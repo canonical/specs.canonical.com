@@ -1,8 +1,7 @@
-import json
 import logging
 from datetime import datetime
-from typing import Dict, List
 
+import jsonlines
 from webapp.google import Sheets
 from webapp.settings import (
     SPECS_FILE,
@@ -72,12 +71,6 @@ def generate_specs(sheet):
             yield spec
 
 
-def save_specs(specs):
-    with open(SPECS_FILE, "w") as f:
-        logger.info("Saved %s specs to specs.json", len(specs))
-        json.dump(specs, f, indent=4)
-
-
 def load_sheet():
     spreadsheet = Sheets(spreadsheet_id=TRACKER_SPREADSHEET_ID)
 
@@ -89,7 +82,7 @@ def load_sheet():
     return sheet
 
 
-def save_specs_locally() -> List[Dict]:
+def save_specs_locally():
     """
     Fetch already parsed specs from Google Sheets and save them locally.
 
@@ -97,10 +90,10 @@ def save_specs_locally() -> List[Dict]:
     """
     logger.info("Fetching specs from Google Sheets")
     sheet = load_sheet()
-    specs = list(generate_specs(sheet))
-    save_specs(specs)
-    print(specs[0])
-    return specs
+
+    with jsonlines.open(SPECS_FILE, mode="w") as writer:
+        for spec in generate_specs(sheet):
+            writer.write(spec)
 
 
 if __name__ == "__main__":
