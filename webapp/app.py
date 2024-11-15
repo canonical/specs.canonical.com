@@ -1,13 +1,14 @@
 import logging
 
 import flask
+import jsonlines
 from cachetools import TTLCache, cached
 from canonicalwebteam.flask_base.app import FlaskBase
 from flask import abort, jsonify, redirect, render_template
 
 from webapp.authors import parse_authors, unify_authors
-from webapp.build_specs import save_specs_locally
 from webapp.google import Drive
+from webapp.settings import SPECS_FILE
 from webapp.spec import Spec
 from webapp.sso import init_sso
 from webapp.update import update_sheet
@@ -30,11 +31,13 @@ app = FlaskBase(
 init_sso(app)
 
 
-# Cache for 30 minutes
-@cached(cache=TTLCache(maxsize=128, ttl=CACHE_TTL))
 def all_specs():
-    # load the specs from the sheet and save them locally
-    return save_specs_locally()
+    try:
+        with jsonlines.open(SPECS_FILE) as reader:
+            for obj in reader:
+                yield obj
+    except FileNotFoundError:
+        return []
 
 
 @app.route("/")

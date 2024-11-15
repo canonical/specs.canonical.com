@@ -2,11 +2,13 @@ import datetime
 import logging
 from typing import Dict, List
 
+import jsonlines
 import tenacity
 
 from webapp.build_specs import save_specs_locally
 from webapp.google import Drive, Sheets
 from webapp.settings import (
+    SPECS_FILE,
     SPECS_SHEET_TITLE,
     TEAMS_FOLDER_ID,
     TMP_SHEET_TITLE,
@@ -134,6 +136,8 @@ def update_sheet() -> None:
     specs_sheet = sheets.get_sheet_by_title(SPECS_SHEET_TITLE)
     tmp_sheet = sheets.ensure_sheet_by_title(TMP_SHEET_TITLE)
 
+    save_specs_locally()
+
     @tenacity.retry(
         stop=tenacity.stop_after_attempt(3),
         wait=tenacity.wait_incrementing(start=0.5, increment=0.8),
@@ -173,7 +177,10 @@ def update_sheet() -> None:
     logger.info("Found %s subfolders", len(folders))
 
     # create a dict with the existing specs in the sheet, ignore the header
-    existing_specs = {spec["fileID"]: spec for spec in save_specs_locally()}
+    existing_specs = {}
+    with jsonlines.open(SPECS_FILE) as reader:
+        for spec in reader:
+            existing_specs = existing_specs[spec["fileID"]] = spec
 
     logger.info(
         "Found %s existing specs in the current sheet",
