@@ -49,6 +49,9 @@ ARG PRIVATE_KEY_ID
 ARG BUILD_ID
 ENV TALISKER_REVISION_ID "${BUILD_ID}"
 
+# Build specs.json file after env vars are set
+RUN python3 -m webapp.build_specs
+
 # Setup commands to run server
 ENTRYPOINT ["./entrypoint"]
 CMD ["0.0.0.0:80"]
