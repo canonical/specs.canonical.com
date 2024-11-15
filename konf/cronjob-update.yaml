@@ -3,7 +3,9 @@ name: cronjob-update-spreadsheet
 # taking into account potential Google API latency.
 schedule: "0 */6 * * *"
 image: prod-workplace-eng.docker-registry.canonical.com/cronjob-update-spreadsheet
+
 memoryLimit: 2024Mi
+memoryRequest: 2024Mi
 
 env:
   - name: SENTRY_DSN
