@@ -3,6 +3,7 @@ domain: specs.canonical.com
 image: prod-comms.ps5.docker-registry.canonical.com/specs.canonical.com
 
 memoryLimit: 2024Mi
+memoryRequest: 2024Mi
 
 env:
   - name: SENTRY_DSN
@@ -29,7 +30,7 @@ production:
 
 # Overrides for staging
 staging:
-  replicas: 3
+  replicas: 1
   nginxConfigurationSnippet: |
     more_set_headers "X-Robots-Tag: noindex";
     more_set_headers "Link: <https://assets.ubuntu.com>; rel=preconnect; crossorigin, <https://assets.ubuntu.com>; rel=preconnect";
