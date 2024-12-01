@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/canonical/specs-v2.canonical.com/db"
 	"github.com/labstack/echo/v4"
@@ -17,6 +18,30 @@ type ListSpecsRequest struct {
 	Team     string `query:"team"`
 	Type     string `query:"type"`
 	Author   string `query:"author"`
+}
+
+type Spec struct {
+	ID                 string    `json:"id"`
+	Title              string    `json:"title"`
+	Status             string    `json:"status"`
+	Authors            []string  `json:"authors"`
+	SpecType           string    `json:"spec_type"`
+	Team               string    `json:"team"`
+	GoogleDocID        string    `json:"google_doc_id"`
+	GoogleDocName      string    `json:"google_doc_name"`
+	GoogleDocURL       string    `json:"google_doc_url"`
+	GoogleDocCreatedAt time.Time `json:"google_doc_created_at"`
+	GoogleDocUpdatedAt time.Time `json:"google_doc_updated_at"`
+	CreatedAt          time.Time `json:"created_at"`
+	UpdatedAt          time.Time `json:"updated_at"`
+	SyncedAt           time.Time `json:"synced_at"`
+}
+
+type ListSpecsResponse struct {
+	Total  int64  `json:"total"`
+	Specs  []Spec `json:"specs"`
+	Limit  int32  `json:"limit"`
+	Offset int32  `json:"offset"`
 }
 
 func (r *ListSpecsRequest) setDefaults() {
@@ -74,10 +99,51 @@ func (s *Server) ListSpecs(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to fetch specs")
 	}
 
-	return c.JSON(http.StatusOK, map[string]interface{}{
-		"total":  total,
-		"specs":  specs,
-		"limit":  req.Limit,
-		"offset": req.Offset,
-	})
+	specsList := ListSpecsResponse{
+		Total:  total,
+		Specs:  make([]Spec, len(specs)),
+		Limit:  req.Limit,
+		Offset: req.Offset,
+	}
+
+	for i, spec := range specs {
+		specsList.Specs[i].ID = spec.ID
+
+		if spec.Title != nil {
+			specsList.Specs[i].Title = *spec.Title
+		}
+		specsList.Specs[i].Team = spec.Team
+		if spec.SpecType != nil {
+			specsList.Specs[i].SpecType = *spec.SpecType
+		}
+		specsList.Specs[i].Authors = spec.Authors
+		if specsList.Specs[i].Authors == nil {
+			specsList.Specs[i].Authors = []string{}
+		}
+		if spec.Status != nil {
+			specsList.Specs[i].Status = *spec.Status
+		}
+
+		specsList.Specs[i].GoogleDocID = spec.GoogleDocID
+		specsList.Specs[i].GoogleDocName = spec.GoogleDocName
+		specsList.Specs[i].GoogleDocURL = spec.GoogleDocURL
+		specsList.Specs[i].GoogleDocCreatedAt = spec.GoogleDocCreatedAt
+		specsList.Specs[i].GoogleDocUpdatedAt = spec.GoogleDocUpdatedAt
+		specsList.Specs[i].CreatedAt = spec.CreatedAt
+		specsList.Specs[i].UpdatedAt = spec.UpdatedAt
+		specsList.Specs[i].SyncedAt = spec.SyncedAt
+	}
+	return c.JSON(http.StatusOK, specsList)
+}
+
+func (s *Server) SpecAuthors(c echo.Context) error {
+	var uniqueAuthors []string
+	if err := s.DB.Model(&db.Spec{}).
+		Select("DISTINCT UNNEST(authors) as author").
+		Order("author").
+		Pluck("author", &uniqueAuthors).
+		Error; err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to fetch authors: "+err.Error())
+	}
+	return c.JSON(http.StatusOK, uniqueAuthors)
 }

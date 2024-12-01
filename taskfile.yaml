@@ -7,11 +7,21 @@ dotenv:
 interval: "500ms"
 
 tasks:
+  install_bun:
+    description: "Install bun"
+    status:
+      - which bun
+    cmds:
+      - echo "Installing bun..."
+      - curl -fsSL https://bun.sh/install | bash
+
   tools:
     description: "Install tools"
+    deps: ["install_bun"]
     cmds:
       - echo "Installing tools..."
       - go install github.com/mitranim/gow@af11a6e
+      - go install github.com/gzuidhof/tygo@v0.2.17
 
   build:
     description: "Install dependencies"
@@ -35,10 +45,24 @@ tasks:
     description: "Run the application in development mode"
     deps: ["tools", "build"]
     cmds:
-      - gow -r=false run cmd/api/main.go
+      - gow -r=false -e=go,mod,html,js,css run cmd/api/main.go & cd ui && bun dev
 
   migrate:
     description: "Run the migrations"
     deps: ["tools"]
     cmds:
       - go run cmd/migrate/main.go
+
+  ### UI tasks
+  generate_types:
+    description: "Generate types"
+    deps: ["tools"]
+    cmds:
+      - echo "Generating types..."
+      - tygo generate --config ./tygo.yaml
+
+  build_ui:
+    description: "Build the UI"
+    cmds:
+      - echo "Building the UI..."
+      - cd ui && bun build

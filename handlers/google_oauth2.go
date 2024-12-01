@@ -44,6 +44,8 @@ func (s *Server) AuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 			return c.Redirect(http.StatusTemporaryRedirect, "/auth/google/login")
 		}
 
+		c.Set("email", emailFromSession(session.Value))
+
 		return next(c)
 	}
 }
@@ -116,4 +118,18 @@ func isValidSession(config *config.Config, token string) bool {
 	expectedSig := base64.URLEncoding.EncodeToString(h.Sum(nil))
 
 	return parts[1] == expectedSig
+}
+
+func emailFromSession(token string) string {
+	parts := strings.Split(token, ".")
+	if len(parts) != 2 {
+		return ""
+	}
+
+	payload, err := base64.URLEncoding.DecodeString(parts[0])
+	if err != nil {
+		return ""
+	}
+
+	return strings.Split(string(payload), ":")[0]
 }

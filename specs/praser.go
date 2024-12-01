@@ -57,6 +57,7 @@ func (s *SyncService) Parse(ctx context.Context, logger *slog.Logger, workerItem
 		GoogleDocURL:       file.File.WebViewLink,
 		GoogleDocCreatedAt: googleDocCreatedAt,
 		GoogleDocUpdatedAt: googleDocUpdatedAt,
+		SyncedAt:           time.Now(),
 	}
 
 	specsMetadatabTable, err := s.DriveClient.DocumentFirstTable(ctx, file.File.Id)
@@ -79,8 +80,14 @@ func (s *SyncService) Parse(ctx context.Context, logger *slog.Logger, workerItem
 		case "authors":
 			newSpec.Authors = []string{}
 			for _, author := range values {
+				author = strings.ReplaceAll(author, ",", "")
+				// remove email <..@..>
+				author = strings.Split(author, "<")[0]
+
+				// TODO: add more author parsing here
+
 				formattedAuthor := strings.TrimSpace(author)
-				authorValid := len(formattedAuthor) > 3
+				authorValid := len(formattedAuthor) > 4
 				if authorValid {
 					newSpec.Authors = append(newSpec.Authors, formattedAuthor)
 				}

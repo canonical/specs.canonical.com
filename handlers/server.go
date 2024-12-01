@@ -1,10 +1,12 @@
 package handlers
 
 import (
+	"io/fs"
 	"log/slog"
 	"net/http"
 
 	"github.com/canonical/specs-v2.canonical.com/config"
+	"github.com/canonical/specs-v2.canonical.com/ui"
 	"github.com/go-playground/validator"
 	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
@@ -44,7 +46,22 @@ func NewServer(logger *slog.Logger, config *config.Config, db *gorm.DB) *Server 
 	e.GET("/auth/google/login", server.HandleGoogleLogin)
 	e.GET("/auth/google/callback", server.HandleGoogleCallback)
 
-	e.GET("/specs", server.ListSpecs, server.AuthMiddleware)
+	e.GET("/api/specs", server.ListSpecs, server.AuthMiddleware)
+	e.GET("/api/specs/authors", server.SpecAuthors, server.AuthMiddleware)
+
+	// Serve static files from dist directory
+	fsys, _ := fs.Sub(ui.UIAssets, "dist")
+	staticHandler := http.FileServer(http.FS(fsys))
+	e.GET("/assets/*", echo.WrapHandler(staticHandler), server.AuthMiddleware)
+	// Serve index.html for all other routes to support client-side routing
+	e.GET("*", func(c echo.Context) error {
+		indexFile, err := fsys.Open("index.html")
+		if err != nil {
+			return err
+		}
+		defer indexFile.Close()
+		return c.Stream(http.StatusOK, "text/html", indexFile)
+	}, server.AuthMiddleware)
 
 	server.Echo = e
 	return server
