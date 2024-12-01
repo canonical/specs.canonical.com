@@ -1,0 +1,44 @@
+version: "3"
+
+dotenv:
+  - .env.local
+  - ".env"
+
+interval: "500ms"
+
+tasks:
+  tools:
+    description: "Install tools"
+    cmds:
+      - echo "Installing tools..."
+      - go install github.com/mitranim/gow@af11a6e
+
+  build:
+    description: "Install dependencies"
+    cmds:
+      - echo "Building the Go application..."
+      - go mod tidy
+
+  run:
+    description: "Run the application"
+    deps: ["tools", "build"]
+    cmds:
+      - go run cmd/api/main.go
+
+  run_sync:
+    description: "Run the application in synchronous mode"
+    deps: ["tools", "build"]
+    cmds:
+      - go run cmd/sync/main.go
+
+  dev:
+    description: "Run the application in development mode"
+    deps: ["tools", "build"]
+    cmds:
+      - gow -r=false run cmd/api/main.go
+
+  migrate:
+    description: "Run the migrations"
+    deps: ["tools"]
+    cmds:
+      - go run cmd/migrate/main.go
