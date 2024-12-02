@@ -48,6 +48,7 @@ func NewServer(logger *slog.Logger, config *config.Config, db *gorm.DB) *Server 
 
 	e.GET("/api/specs", server.ListSpecs, server.AuthMiddleware)
 	e.GET("/api/specs/authors", server.SpecAuthors, server.AuthMiddleware)
+	e.GET("/api/specs/teams", server.SpecTeams, server.AuthMiddleware)
 
 	// Serve static files from dist directory
 	fsys, _ := fs.Sub(ui.UIAssets, "dist")

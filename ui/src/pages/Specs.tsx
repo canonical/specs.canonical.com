@@ -1,5 +1,10 @@
-import { Navigation, Theme } from "@canonical/react-components";
-import { useInfiniteQuery, useQueries, useQuery } from "@tanstack/react-query";
+import {
+  Navigation,
+  Notification,
+  Spinner,
+  Theme,
+} from "@canonical/react-components";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import qs from "qs";
 import InfiniteScroll from "react-infinite-scroll-component";
 import Filters from "../components/Filters";
@@ -30,29 +35,36 @@ export const SPEC_STATUSES = new Set([
 
 function Specs() {
   const { userOptions, setUserOptions } = useURLState();
-  const { data, fetchNextPage, hasNextPage } = useInfiniteQuery({
-    queryKey: ["specs", userOptions.filter, userOptions.searchQuery],
-    queryFn: async ({ pageParam = 0 }) => {
-      const params = {
-        ...userOptions.filter,
-        searchQuery: userOptions.searchQuery,
-        offset: pageParam,
-        limit: userOptions.limit,
-      };
-      const queryString = qs.stringify(params);
-      const res = await fetch(`/api/specs?${queryString}`);
-      return res.json() as Promise<ListSpecsResponse>;
-    },
-    getNextPageParam: (lastPage, pages) =>
-      lastPage.specs.length === userOptions.limit
-        ? pages.length * userOptions.limit
-        : undefined,
-    initialPageParam: 0,
-  });
+  const { data, fetchNextPage, hasNextPage, error, isLoading } =
+    useInfiniteQuery({
+      queryKey: ["specs", userOptions.filter, userOptions.searchQuery],
+      queryFn: async ({ pageParam = 0 }) => {
+        const params = {
+          ...userOptions.filter,
+          searchQuery: userOptions.searchQuery,
+          offset: pageParam,
+          limit: LIMIT,
+        };
+        const queryString = qs.stringify(params, {
+          arrayFormat: "repeat",
+          skipNulls: true,
+          allowEmptyArrays: false,
+        });
+        const res = await fetch(`/api/specs?${queryString}`);
+        const data = (await res.json()) as Promise<ListSpecsResponse>;
+        if (!res.ok) {
+          throw new Error((data as unknown as { message: string }).message);
+        }
+        return data;
+      },
+      getNextPageParam: (lastPage, pages) =>
+        lastPage.specs?.length === LIMIT ? pages.length * LIMIT : undefined,
+      initialPageParam: 0,
+    });
 
   const totalSpecs = data?.pages[0]?.total || 0;
-  const allSpecs = data?.pages.flatMap((page) => page.specs) || [];
-
+  const allSpecs =
+    data?.pages.flatMap((page) => page.specs).filter(Boolean) || [];
   const { data: authorsData } = useQuery({
     queryKey: ["authors"],
     queryFn: async () => {
@@ -63,8 +75,17 @@ function Specs() {
     refetchOnMount: false,
   });
 
+  const { data: teamsData } = useQuery({
+    queryKey: ["teams"],
+    queryFn: async () => {
+      const res = await fetch("/api/specs/teams");
+      return res.json() as Promise<string[]>;
+    },
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+  });
   const authors = authorsData || [];
-  const teams = allSpecs.map((spec) => spec.team);
+  const teams = teamsData || [];
 
   return (
     <>
@@ -77,10 +98,13 @@ function Specs() {
           title: "Specifications",
           url: "#",
         }}
-        items={[
-          { label: "All Docs", url: "/" },
-          { label: "My Docs", url: "/my-specs" },
-        ]}
+        items={
+          [
+            // TODO: maybe add these later
+            // { label: "All Docs", url: "/" },
+            // { label: "My Docs", url: "/my-specs" },
+          ]
+        }
         itemsRight={[
           {
             url: "https://docs.google.com/document/d/1lStJjBGW7lyojgBhxGLUNnliUocYWjAZ1VEbbVduX54/edit#heading=h.31hys4te5m58",
@@ -111,7 +135,7 @@ function Specs() {
             </div>
           </div>
         </div>
-        <div className="l-fluid-breakout__aside">
+        <div className="l-fluid-breakout__aside sticky-sidebar">
           <Filters
             authors={sortedSet(new Set(authors))}
             teams={sortedSet(new Set(teams))}
@@ -119,16 +143,18 @@ function Specs() {
             setUserOptions={setUserOptions}
           />
         </div>
-
+        {isLoading && <Spinner text="Loading..." />}
+        {error && (
+          <Notification severity="negative" title="Error fetching specs">
+            <pre>{error.message}</pre>
+          </Notification>
+        )}
         <div className="l-fluid-breakout__main" id="cards">
           <InfiniteScroll
             dataLength={allSpecs.length}
             next={fetchNextPage}
             hasMore={!!hasNextPage}
             loader={<p className="u-align--center">Loading more specs...</p>}
-            endMessage={
-              <p className="u-align--center p-text--small">No more specs</p>
-            }
           >
             {allSpecs.map((spec, index) => (
               <SpecCard key={index} spec={spec} />

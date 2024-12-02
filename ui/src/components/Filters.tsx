@@ -50,7 +50,7 @@ const Filters = ({
           name="status"
           value={status}
           onChange={formik.handleChange}
-          checked={formik.values.status.includes(status)}
+          checked={formik.values.status?.includes(status)}
         />
       ))}
       <p className="u-no-margin--bottom">Type</p>
@@ -61,7 +61,7 @@ const Filters = ({
           value={typeName}
           name="type"
           onChange={formik.handleChange}
-          checked={formik.values.type.includes(typeName)}
+          checked={formik.values.type?.includes(typeName)}
         />
       ))}
       <Select
@@ -76,15 +76,15 @@ const Filters = ({
         onChange={formik.handleChange}
       />
       <Select
-        value={formik.values.sortBy}
+        value={formik.values.orderBy}
         label="Sort by"
-        name="sortBy"
-        id="sortBy"
+        name="orderBy"
+        id="orderBy"
         options={[
-          { value: "date", label: "Last modified" },
-          { value: "created", label: "Create date" },
-          { value: "name", label: "Name" },
-          { value: "index", label: "Spec index" },
+          { value: "updated_at", label: "Last modified" },
+          { value: "created_at", label: "Create date" },
+          { value: "title", label: "Name" },
+          { value: "id", label: "Spec index" },
         ]}
         onChange={formik.handleChange}
       />

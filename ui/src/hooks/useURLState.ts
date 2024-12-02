@@ -4,8 +4,6 @@ import { useEffect, useState } from "react";
 export type UserOptions = {
   filter: any;
   searchQuery: string;
-  offset?: number;
-  limit?: number;
 };
 
 const useURLState = () => {
@@ -19,15 +17,13 @@ const useURLState = () => {
 
     return {
       filter: {
-        team: searchState?.filter?.team,
-        status: searchState?.filter?.status || [],
-        type: searchState?.filter?.type || [],
-        author: searchState?.filter?.author,
-        sortBy: searchState?.filter?.sortBy || "date",
+        team: searchState?.filter?.team || null,
+        status: searchState?.filter?.status || null,
+        type: searchState?.filter?.type || null,
+        author: searchState?.filter?.author || null,
+        orderBy: searchState?.filter?.orderBy || null,
       },
       searchQuery: searchState?.searchQuery || "",
-      offset: searchState?.offset ? parseInt(searchState.offset) : 0,
-      limit: searchState?.limit ? parseInt(searchState.limit) : 10,
     };
   };
 
@@ -36,7 +32,11 @@ const useURLState = () => {
   );
 
   useEffect(() => {
-    const queryParams = qs.stringify(userOptions);
+    const queryParams = qs.stringify(userOptions, {
+      arrayFormat: "repeat",
+      skipNulls: true,
+      allowEmptyArrays: false,
+    });
     const newURL = window.location.pathname + "?" + queryParams;
     history.pushState(null, "", newURL);
   }, [userOptions]);

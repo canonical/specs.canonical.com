@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -10,14 +11,16 @@ import (
 )
 
 type ListSpecsRequest struct {
-	Limit    int32  `query:"limit" validate:"min=1,max=100"`
-	Offset   int32  `query:"offset" validate:"min=0"`
-	OrderBy  string `query:"order_by" validate:"oneof=created_at updated_at title team id"`
-	OrderDir string `query:"order_dir" validate:"oneof=asc desc"`
-	Title    string `query:"title"`
-	Team     string `query:"team"`
-	Type     string `query:"type"`
-	Author   string `query:"author"`
+	Limit       int32    `query:"limit" validate:"min=1,max=100"`
+	Offset      int32    `query:"offset" validate:"min=0"`
+	OrderBy     string   `query:"orderBy" validate:"oneof=created_at updated_at title team id"`
+	OrderDir    string   `query:"orderDir" validate:"oneof=asc desc"`
+	Title       string   `query:"title"`
+	Team        string   `query:"team"`
+	Type        []string `query:"type"`
+	Status      []string `query:"status"`
+	Author      string   `query:"author"`
+	SearchQuery string   `query:"searchQuery"`
 }
 
 type Spec struct {
@@ -52,7 +55,7 @@ func (r *ListSpecsRequest) setDefaults() {
 		r.OrderBy = "created_at"
 	}
 	if r.OrderDir == "" {
-		r.OrderDir = "desc"
+		r.OrderDir = "asc"
 	}
 }
 
@@ -61,6 +64,10 @@ func (s *Server) ListSpecs(c echo.Context) error {
 	if err := c.Bind(req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid query parameters")
 	}
+	q := c.Request().URL.Query()
+	req.Type = q["type"]
+	req.Status = q["status"]
+	// req.
 	req.setDefaults()
 	if err := c.Validate(req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
@@ -75,15 +82,51 @@ func (s *Server) ListSpecs(c echo.Context) error {
 	if req.Team != "" {
 		query = query.Where("team ILIKE ?", "%"+req.Team+"%")
 	}
-	if req.Type != "" {
-		query = query.Where("spec_type = ?", req.Type)
+	if len(req.Type) > 0 {
+		query = query.Where("spec_type IN (?)", req.Type)
 	}
+	if len(req.Status) > 0 {
+		lowercaseStatus := make([]string, len(req.Status))
+
+		for i, status := range req.Status {
+			lowercaseStatus[i] = strings.ToLower(status)
+		}
+		query = query.Where("lower(status) IN ?", lowercaseStatus)
+	}
+
 	if req.Author != "" {
 		query = query.Where("ARRAY_TO_STRING(authors, ' ') ILIKE ?", "%"+strings.TrimSpace(req.Author)+"%")
 	}
+
 	if req.OrderBy == "created_at" {
 		req.OrderBy = "google_doc_created_at"
 	}
+
+	if req.SearchQuery != "" {
+		searchConfig := "english" // or any other language configuration
+		searchFields := []string{"id", "title", "team", "google_doc_name"}
+
+		// Create concatenated text search vector
+		vectorExpr := fmt.Sprintf(
+			"to_tsvector('%s', %s)",
+			searchConfig,
+			strings.Join(searchFields, " || ' ' || "),
+		)
+
+		// Create plain text query (converts search terms to tsquery)
+		queryExpr := fmt.Sprintf(
+			"plainto_tsquery('%s', ?)",
+			searchConfig,
+		)
+
+		query = query.Where(fmt.Sprintf("%s @@ %s", vectorExpr, queryExpr), req.SearchQuery)
+
+		// also add ilike query for the same search fields
+		for _, field := range searchFields {
+			query = query.Or(fmt.Sprintf("%s ILIKE ?", field), "%"+req.SearchQuery+"%")
+		}
+	}
+
 	var total int64
 	if err := query.Count(&total).Error; err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to count specs")
@@ -146,4 +189,16 @@ func (s *Server) SpecAuthors(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to fetch authors: "+err.Error())
 	}
 	return c.JSON(http.StatusOK, uniqueAuthors)
+}
+
+func (s *Server) SpecTeams(c echo.Context) error {
+	var uniqueTeams []string
+	if err := s.DB.Model(&db.Spec{}).
+		Select("DISTINCT team").
+		Order("team").
+		Pluck("team", &uniqueTeams).
+		Error; err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to fetch teams: "+err.Error())
+	}
+	return c.JSON(http.StatusOK, uniqueTeams)
 }
