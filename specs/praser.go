@@ -37,6 +37,7 @@ func (s *SyncService) Parse(ctx context.Context, logger *slog.Logger, workerItem
 	googleDocCreatedAt := parsedTime
 
 	// check if spec hasn't changed since last sync
+	// TODO: doesn't work
 	if !s.Config.ForceSync {
 		var updatedAt time.Time
 		s.DB.Raw("SELECT google_doc_updated_at FROM specs WHERE id = ? LIMIT 1", specId).Scan(&updatedAt)

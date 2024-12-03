@@ -19,9 +19,6 @@ type Spec struct {
 	GoogleDocURL       string         `gorm:"type:text;not null;column:google_doc_url"`
 	GoogleDocCreatedAt time.Time      `gorm:"not null;column:google_doc_created_at"`
 	GoogleDocUpdatedAt time.Time      `gorm:"not null;column:google_doc_updated_at"`
-	OpenComments       []string       `gorm:"type:text[];column:open_comments"`
-	TotalComments      []string       `gorm:"type:text[];column:total_comments"`
-	SpecHTML           *string        `gorm:"type:text;column:spec_html"`
 	CreatedAt          time.Time      `gorm:"not null;default:CURRENT_TIMESTAMP"`
 	UpdatedAt          time.Time      `gorm:"not null;default:CURRENT_TIMESTAMP"`
 	SyncedAt           time.Time      `gorm:"not null;default:CURRENT_TIMESTAMP"`

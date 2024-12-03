@@ -10,7 +10,7 @@ services:
       - db-data:/var/lib/postgresql/data
     environment:
       POSTGRES_USER: ${DATABASE_USER}
-      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_PASSWORD: ${DATABASE_PASS}
       POSTGRES_DB: ${DATABASE_NAME}
     network_mode: "host"
 

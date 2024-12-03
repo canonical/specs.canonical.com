@@ -67,7 +67,7 @@ func (s *Server) ListSpecs(c echo.Context) error {
 	q := c.Request().URL.Query()
 	req.Type = q["type"]
 	req.Status = q["status"]
-	// req.
+
 	req.setDefaults()
 	if err := c.Validate(req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
