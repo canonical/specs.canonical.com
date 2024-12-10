@@ -87,7 +87,7 @@ func (s *SyncService) Parse(ctx context.Context, logger *slog.Logger, workerItem
 					author = strings.TrimSpace(author)
 
 					// remove (PjM)..
-					if strings.HasPrefix(author, "(") && strings.HasSuffix(author, ")") {
+					if strings.HasPrefix(author, "(") {
 						continue
 					}
 
