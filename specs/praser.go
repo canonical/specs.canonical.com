@@ -37,11 +37,10 @@ func (s *SyncService) Parse(ctx context.Context, logger *slog.Logger, workerItem
 	googleDocCreatedAt := parsedTime
 
 	// check if spec hasn't changed since last sync
-	// TODO: doesn't work
 	if !s.Config.ForceSync {
 		var updatedAt time.Time
-		s.DB.Raw("SELECT google_doc_updated_at FROM specs WHERE id = ? LIMIT 1", specId).Scan(&updatedAt)
-		if !updatedAt.IsZero() && updatedAt == googleDocUpdatedAt {
+		s.DB.Model(&db.Spec{}).Where("id = ?", specId).Pluck("google_doc_updated_at", &updatedAt)
+		if !updatedAt.IsZero() && updatedAt.Equal(googleDocUpdatedAt) {
 			logger.Debug("spec hasn't changed since last sync")
 			s.DB.Model(&db.Spec{}).Where("id = ?", specId).Update("synced_at", time.Now())
 			s.SkippedCount++
@@ -80,17 +79,23 @@ func (s *SyncService) Parse(ctx context.Context, logger *slog.Logger, workerItem
 			newSpec.Status = &values[0]
 		case "authors":
 			newSpec.Authors = []string{}
-			for _, author := range values {
-				author = strings.ReplaceAll(author, ",", "")
-				// remove email <..@..>
-				author = strings.Split(author, "<")[0]
+			for _, value := range values {
+				for _, author := range strings.FieldsFunc(value, AuthorsSplit) {
+					// remove email <..@..>
+					author = strings.TrimSpace(author)
+					author = strings.Split(author, "<")[0]
+					author = strings.TrimSpace(author)
 
-				// TODO: add more author parsing here
+					// remove (PjM)..
+					if strings.HasPrefix(author, "(") && strings.HasSuffix(author, ")") {
+						continue
+					}
 
-				formattedAuthor := strings.TrimSpace(author)
-				authorValid := len(formattedAuthor) > 4
-				if authorValid {
-					newSpec.Authors = append(newSpec.Authors, formattedAuthor)
+					formattedAuthor := strings.TrimSpace(author)
+					authorValid := len(formattedAuthor) > 4
+					if authorValid {
+						newSpec.Authors = append(newSpec.Authors, formattedAuthor)
+					}
 				}
 			}
 		case "type":
@@ -103,4 +108,8 @@ func (s *SyncService) Parse(ctx context.Context, logger *slog.Logger, workerItem
 	}
 
 	return nil
+}
+
+func AuthorsSplit(r rune) bool {
+	return r == ',' || r == ';' || r == '/' || r == '|'
 }

@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -22,10 +23,11 @@ type GoogleUser struct {
 }
 
 func (s *Server) initGoogleOAuth() *oauth2.Config {
+	callbackURL, _ := url.JoinPath(s.Config.BaseURL, "/auth/google/callback")
 	return &oauth2.Config{
 		ClientID:     s.Config.GoogleOAuthClientID,
 		ClientSecret: s.Config.GoogleOAuthClientSecret,
-		RedirectURL:  "http://localhost:3000/auth/google/callback", // Adjust this URL
+		RedirectURL:  callbackURL,
 		Scopes: []string{
 			"https://www.googleapis.com/auth/userinfo.email",
 		},

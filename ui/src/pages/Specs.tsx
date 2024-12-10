@@ -13,8 +13,9 @@ import type { ListSpecsResponse } from "../generated/types";
 import useURLState from "../hooks/useURLState";
 import { sortedSet } from "../utils";
 
-// 3 rows on medium screens
-const LIMIT = 4 * 3;
+const LIMIT = 250;
+const INITIAL_LIMIT = 50;
+
 export const SPEC_TYPES = new Set([
   "Implementation",
   "Product Requirement",
@@ -43,7 +44,7 @@ function Specs() {
           ...userOptions.filter,
           searchQuery: userOptions.searchQuery,
           offset: pageParam,
-          limit: LIMIT,
+          limit: INITIAL_LIMIT,
         };
         const queryString = qs.stringify(params, {
           arrayFormat: "repeat",

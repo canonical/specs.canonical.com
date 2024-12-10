@@ -13,6 +13,7 @@ type Config struct {
 	Port string `env:"required"`
 	Host string `env:"default:localhost"`
 
+	BaseURL   string `env:"required"`
 	AppEnv    string `env:"required,enums:development;production"`
 	SecretKey string `env:"required"`
 	LogLevel  string `env:"default:debug,enums:debug;info;warn;error"`
