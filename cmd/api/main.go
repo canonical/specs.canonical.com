@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"os"
 
 	"github.com/canonical/specs-v2.canonical.com/config"
@@ -13,12 +14,19 @@ func main() {
 	c := config.MustLoadConfig()
 	logger := config.SetupLogger()
 
-	db, err := db.NewDB(logger, c)
+	dbConn, err := db.NewDB(logger, c)
 	if err != nil {
 		logger.Error("failed to connect to database", "error", err.Error())
 		os.Exit(1)
 	}
-	server := handlers.NewServer(logger, c, db)
+
+	if err := db.Migrate(dbConn); err != nil {
+		log.Fatal(err)
+	}
+
+	logger.Info("migrations completed successfully")
+
+	server := handlers.NewServer(logger, c, dbConn)
 
 	err = server.Echo.Start(server.Config.GetHost())
 	if err != nil {

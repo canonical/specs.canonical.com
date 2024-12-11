@@ -24,10 +24,13 @@ tasks:
       - go install github.com/gzuidhof/tygo@v0.2.17
 
   build:
-    description: "Install dependencies"
+    description: "Build the application"
+    deps: ["tools"]
     cmds:
-      - echo "Building the Go application..."
-      - go mod tidy
+      - echo "Building the application..."
+      - go build -o bin/api cmd/api/main.go
+      - go build -o bin/sync cmd/sync/main.go
+      - go build -o bin/migrate cmd/migrate/main.go
 
   run:
     description: "Run the application"
@@ -42,7 +45,7 @@ tasks:
       - go run cmd/sync/main.go
 
   dev:
-    description: "Run the application in development mode"
+    description: "Run the application in watch mode"
     deps: ["tools", "build"]
     cmds:
       - gow -r=false -e=go,mod,html,js,css run cmd/api/main.go & cd ui && bun dev
@@ -63,6 +66,7 @@ tasks:
 
   build_ui:
     description: "Build the UI"
+    deps: ["tools"]
     cmds:
       - echo "Building the UI..."
-      - cd ui && bun build
+      - cd ui && bun install  && bun run build

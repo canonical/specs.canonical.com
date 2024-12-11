@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -18,11 +19,17 @@ func main() {
 	c := config.MustLoadConfig()
 	logger := config.SetupLogger()
 
-	db, err := db.NewDB(logger, c)
+	dbConn, err := db.NewDB(logger, c)
 	if err != nil {
 		logger.Error("failed to connect to database", "error", err.Error())
 		os.Exit(1)
 	}
+
+	if err := db.Migrate(dbConn); err != nil {
+		log.Fatal(err)
+	}
+
+	logger.Info("migrations completed successfully")
 
 	googleDrive, err := googledrive.NewGoogleDrive(googledrive.Config{
 		ClientID:          "112404606310881291739",
@@ -45,7 +52,7 @@ func main() {
 	syncService := specs.NewSyncService(
 		logger,
 		googleDrive,
-		db,
+		dbConn,
 		specs.SyncConfig{
 			RootFolderID:  "19jxxVn_3n6ZAmFl3DReEVgZjxZnlky4X",
 			MaxGoroutines: 15,
