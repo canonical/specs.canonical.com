@@ -11,23 +11,15 @@ platforms:
   amd64:
 
 services:
-  server:
-    override: replace
+  go:
+    override: merge
     command: /usr/bin/api
     startup: enabled
-  sync-schedular:
-    override: replace
+  go-schedular:
+    override: merge
     command: /app/sync
     environment:
       SYNC_INTERVAL: 30m
-    startup: enabled
-
-checks:
-  api:
-    override: merge
-    level: ready
-    http:
-      url: http://localhost:8080/_status/check
 
 parts:
   certificates:
@@ -43,6 +35,10 @@ parts:
       - go/1.23/stable
       - task/latest/stable
       - node/20/stable
+    build-environment:
+      - GOOS: linux
+      - GOARCH: $CRAFT_ARCH_BUILD_FOR
+      - CGO_ENABLED: 0
     override-build: |
       npm install -g bun
       cd $CRAFT_PART_SRC
@@ -50,14 +46,9 @@ parts:
       task build
       install -D -m755 ./bin/api ${CRAFT_PART_INSTALL}/opt/specs/bin/api
       install -D -m755 ./bin/sync ${CRAFT_PART_INSTALL}/opt/specs/bin/sync
-      install -D -m755 ./bin/migrate ${CRAFT_PART_INSTALL}/opt/specs/bin/migrate
     organize:
       opt/specs/bin/api: usr/bin/api
       opt/specs/bin/sync: usr/bin/sync
-      opt/specs/bin/migrate: usr/bin/migrate
-    stage-packages:
-      - base-files_var
-
   deb-security-manifest:
     plugin: nil
     after:
