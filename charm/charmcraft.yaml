@@ -1,0 +1,56 @@
+# This file configures Charmcraft.
+# See https://juju.is/docs/sdk/charmcraft-config for guidance.
+
+name: charm
+
+type: charm
+
+base: ubuntu@24.04
+
+platforms:
+  amd64:
+
+summary: The Google sync and ui service for Canonical specifications.
+
+description: The Google sync and ui service for Canonical specifications.
+
+extensions:
+  - go-framework
+
+requires:
+  postgresql:
+    interface: postgresql_client
+    optional: false
+    limit: 1
+
+
+config:
+  options:
+    port:
+      type: int
+      default: 8080
+      description: The port the service listens on.
+    host:
+      type: string
+      default: specs.staging.canonical.com
+      description: The host the service listens on.
+    app-env:
+      type: string
+      default: production
+      description: "The environment the service is running in. enum: `[development, production]`"
+    secret-key:
+      type: secret
+      description: "The secret key for the service."
+    google-private-key:
+      type: secret
+      description: "The private key for the Google service account."
+    google-private-key-id:
+      type: string
+      description: "The private key id for the Google service account."
+    google-oauth-client-id:
+      type: string
+      description: "The client id for the Google oauth service account."
+    google-oauth-client-secret:
+      type: secret
+      description: "The client secret for the Google oauth service account."
+
