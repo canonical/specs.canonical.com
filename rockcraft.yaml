@@ -17,7 +17,7 @@ services:
     startup: enabled
   go-schedular:
     override: merge
-    command: /app/sync
+    command: /usr/bin/sync
     environment:
       SYNC_INTERVAL: 30m
 
