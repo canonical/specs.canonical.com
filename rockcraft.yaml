@@ -1,12 +1,12 @@
 name: canonical-specs-v2
 
-base: bare
-build-base: ubuntu@22.04
 version: "2.0.0"
 summary: Canonical specifications
 description: |
-  The Google sync and ui service for Canonical specifications.
+  The Google sync and UI service for Canonical specifications.
 license: Apache-2.0
+base: bare
+build-base: ubuntu@24.04
 platforms:
   amd64:
 
@@ -49,6 +49,8 @@ parts:
     organize:
       opt/specs/bin/api: usr/bin/api
       opt/specs/bin/sync: usr/bin/sync
+    stage-packages:
+      - base-files_var
   deb-security-manifest:
     plugin: nil
     after:
@@ -57,4 +59,3 @@ parts:
       set -x
       mkdir -p $CRAFT_PRIME/usr/share/rocks/
       (echo "# os-release" && cat /etc/os-release && echo "# dpkg-query" && dpkg-query --admindir=$CRAFT_PRIME/var/lib/dpkg/ -f '${db:Status-Abbrev},${binary:Package},${Version},${source:Package},${Source:Version}\n' -W) > $CRAFT_PRIME/usr/share/rocks/dpkg.query
-

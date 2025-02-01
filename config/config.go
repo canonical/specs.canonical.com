@@ -18,10 +18,7 @@ type Config struct {
 	SecretKey string `env:"required"`
 	LogLevel  string `env:"default:debug,enums:debug;info;warn;error"`
 
-	DatabaseHost string `env:"required"`
-	DatabaseUser string `env:"default:postgres"`
-	DatabasePass string `env:""`
-	DatabaseName string `env:"required"`
+	PostgresqlDbConnectString string `env:"required"`
 
 	GooglePrivateKeyID string `env:"required"`
 	GooglePrivateKey   string `env:"required"`
@@ -41,12 +38,7 @@ func (c *Config) GetHost() string {
 }
 
 func (c *Config) GetDBDSN() string {
-	dsn := fmt.Sprintf("host=%s user=%s dbname=%s sslmode=disable",
-		c.DatabaseHost, c.DatabaseUser, c.DatabaseName)
-	if c.DatabasePass != "" {
-		dsn += fmt.Sprintf(" password=%s", c.DatabasePass)
-	}
-	return dsn
+	return c.PostgresqlDbConnectString
 }
 
 func (c *Config) GetSyncInterval() time.Duration {
