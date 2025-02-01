@@ -12,33 +12,26 @@ platforms:
 
 services:
   go:
-    override: merge
+    override: replace
     command: /usr/bin/api
     startup: enabled
-  go-schedular:
-    override: merge
+    user: _daemon_
+  go-scheduler:
+    override: replace
     command: /usr/bin/sync
+    user: _daemon_
     environment:
       SYNC_INTERVAL: 30m
 
-parts:
-  certificates:
-    plugin: nil
-    stage-packages:
-      - ca-certificates
+extensions:
+  - go-framework
 
-  go-build:
-    plugin: go
-    source: .
-    source-type: local
+parts:
+  go-framework/install-app:
     build-snaps:
       - go/1.23/stable
       - task/latest/stable
       - node/20/stable
-    build-environment:
-      - GOOS: linux
-      - GOARCH: $CRAFT_ARCH_BUILD_FOR
-      - CGO_ENABLED: 0
     override-build: |
       npm install -g bun
       cd $CRAFT_PART_SRC
@@ -49,13 +42,7 @@ parts:
     organize:
       opt/specs/bin/api: usr/bin/api
       opt/specs/bin/sync: usr/bin/sync
-    stage-packages:
-      - base-files_var
-  deb-security-manifest:
+  runtime-slices:
     plugin: nil
-    after:
-      - certificates
-    override-prime: |
-      set -x
-      mkdir -p $CRAFT_PRIME/usr/share/rocks/
-      (echo "# os-release" && cat /etc/os-release && echo "# dpkg-query" && dpkg-query --admindir=$CRAFT_PRIME/var/lib/dpkg/ -f '${db:Status-Abbrev},${binary:Package},${Version},${source:Package},${Source:Version}\n' -W) > $CRAFT_PRIME/usr/share/rocks/dpkg.query
+    stage-packages:
+      - bash_bins

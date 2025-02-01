@@ -94,7 +94,7 @@ func createSession(config *config.Config, email string) string {
 	timestamp := time.Now().Unix()
 	payload := email + ":" + string(timestamp)
 
-	h := hmac.New(sha256.New, []byte(config.SecretKey))
+	h := hmac.New(sha256.New, []byte(config.AppSecretKey))
 	h.Write([]byte(payload))
 	signature := base64.URLEncoding.EncodeToString(h.Sum(nil))
 
@@ -115,7 +115,7 @@ func isValidSession(config *config.Config, token string) bool {
 	}
 
 	// Recreate signature
-	h := hmac.New(sha256.New, []byte(config.SecretKey))
+	h := hmac.New(sha256.New, []byte(config.AppSecretKey))
 	h.Write(payload)
 	expectedSig := base64.URLEncoding.EncodeToString(h.Sum(nil))
 
