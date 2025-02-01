@@ -5,28 +5,23 @@ summary: Canonical specifications
 description: |
   The Google sync and UI service for Canonical specifications.
 license: Apache-2.0
-base: bare
-build-base: ubuntu@24.04
+base: ubuntu@24.04
 platforms:
   amd64:
 
 services:
   go:
-    override: merge
-    command: /usr/bin/api
+    override: replace
+    command: /usr/bin/specs-api
     startup: enabled
-  go-schedular:
-    override: merge
-    command: /usr/bin/sync
+  go-scheduler:
+    override: replace
+    startup: enabled
+    command: /usr/bin/specs-sync
     environment:
       SYNC_INTERVAL: 30m
 
 parts:
-  certificates:
-    plugin: nil
-    stage-packages:
-      - ca-certificates
-
   go-build:
     plugin: go
     source: .
@@ -39,23 +34,26 @@ parts:
       - GOOS: linux
       - GOARCH: $CRAFT_ARCH_BUILD_FOR
       - CGO_ENABLED: 0
+    overlay-packages:
+      - coreutils
+      - bash
     override-build: |
+      set -eux
+      # install bun.js
       npm install -g bun
+
+      # build the UI
       cd $CRAFT_PART_SRC
       task build_ui
+
+      # build the API
       task build
+
+      BIN_DIR="$CRAFT_PART_INSTALL/specs"
+      mkdir -p $BIN_DIR
+
       install -D -m755 ./bin/api ${CRAFT_PART_INSTALL}/opt/specs/bin/api
       install -D -m755 ./bin/sync ${CRAFT_PART_INSTALL}/opt/specs/bin/sync
     organize:
-      opt/specs/bin/api: usr/bin/api
-      opt/specs/bin/sync: usr/bin/sync
-    stage-packages:
-      - base-files_var
-  deb-security-manifest:
-    plugin: nil
-    after:
-      - certificates
-    override-prime: |
-      set -x
-      mkdir -p $CRAFT_PRIME/usr/share/rocks/
-      (echo "# os-release" && cat /etc/os-release && echo "# dpkg-query" && dpkg-query --admindir=$CRAFT_PRIME/var/lib/dpkg/ -f '${db:Status-Abbrev},${binary:Package},${Version},${source:Package},${Source:Version}\n' -W) > $CRAFT_PRIME/usr/share/rocks/dpkg.query
+      opt/specs/bin/api: usr/bin/specs-api
+      opt/specs/bin/sync: usr/bin/specs-sync

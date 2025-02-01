@@ -41,6 +41,13 @@ func NewGoogleDrive(config Config) (*GoogleDrive, error) {
 		return nil, err
 	}
 
+	// verify the connection and credentials
+	_, err = driveService.About.Get().Fields("user").Do()
+
+	if err != nil {
+		return nil, err
+	}
+
 	return &GoogleDrive{
 		DriveService: driveService,
 	}, nil

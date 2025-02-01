@@ -10,13 +10,13 @@ import (
 )
 
 type Config struct {
-	Port string `env:"required"`
-	Host string `env:"default:localhost"`
+	AppPort      string `env:"required"`
+	AppSecretKey string `env:"required"`
+	Host         string `env:"default:localhost"`
 
-	BaseURL   string `env:"required"`
-	AppEnv    string `env:"required,enums:development;production"`
-	SecretKey string `env:"required"`
-	LogLevel  string `env:"default:debug,enums:debug;info;warn;error"`
+	BaseURL  string `env:"required"`
+	AppEnv   string `env:"required,enums:development;production"`
+	LogLevel string `env:"default:debug,enums:debug;info;warn;error"`
 
 	PostgresqlDbConnectString string `env:"required"`
 
@@ -34,7 +34,7 @@ func (c *Config) IsProduction() bool {
 }
 
 func (c *Config) GetHost() string {
-	return fmt.Sprintf("%s:%s", c.Host, c.Port)
+	return fmt.Sprintf("%s:%s", c.Host, c.AppPort)
 }
 
 func (c *Config) GetDBDSN() string {
@@ -125,6 +125,13 @@ func GetEnv(key string) string {
 		strings.ToUpper(toSnakeCase(key)),
 		strings.ToLower(toSnakeCase(key)),
 	}
+
+	// prefix variations with APP_ to accept Go charm extension environments
+	prefixed := make([]string, len(variations))
+	for i, key := range variations {
+		prefixed[i] = "APP_" + key
+	}
+	variations = append(variations, prefixed...)
 
 	for _, key := range variations {
 		if val := os.Getenv(key); val != "" {
