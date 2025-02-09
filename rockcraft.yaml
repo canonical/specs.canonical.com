@@ -33,8 +33,9 @@ parts:
     build-environment:
       - GOOS: linux
       - GOARCH: $CRAFT_ARCH_BUILD_FOR
-      - CGO_ENABLED: 0
+      - CGO_ENABLED: "0"
     overlay-packages:
+      - ca-certificates
       - coreutils
       - bash
     override-build: |

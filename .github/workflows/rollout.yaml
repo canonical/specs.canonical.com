@@ -1,0 +1,15 @@
+name: Rollout to production
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit_sha:
+        description: "Commit SHA to deploy"
+        required: false
+        default: ${{ github.sha }}
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: print commit sha
+        run: echo ${{ github.event.inputs.commit_sha }}
