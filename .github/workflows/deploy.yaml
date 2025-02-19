@@ -71,7 +71,7 @@ jobs:
       [self-hosted, self-hosted-linux-amd64-jammy-private-endpoint-medium]
     needs: commit-check
     outputs:
-      private_image_url: ${{ steps.image_url.outputs.private_image_url }}
+      image_url: ${{ steps.image_url.outputs.image_url }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -113,24 +113,12 @@ jobs:
           IMAGE_URL=ghcr.io/${{ github.repository }}:$(date +%s)-${GITHUB_SHA:0:7}
           echo -e "> [!NOTE]\n> Rockcraft OCI image: $IMAGE_URL" >> $GITHUB_STEP_SUMMARY
           echo $DOCKERHUB_MIRROR
-          PRIVATE_IMAGE_URL=10.142.8.140:5001/${{ github.repository }}:$(date +%s)-${GITHUB_SHA:0:7}
           echo "ghcr_image_url=$IMAGE_URL" >> $GITHUB_OUTPUT
-          echo "private_image_url=$PRIVATE_IMAGE_URL" >> $GITHUB_OUTPUT
+          echo "image_url=$IMAGE_URL" >> $GITHUB_OUTPUT
       - name: Push to GHCR
-        env:
-          PS6_REGISTRY_CA: ${{ vars.PS6_REGISTRY_CA }}
-          PS6_REGISTRY_CERTIFICATE: ${{ vars.PS6_REGISTRY_CERTIFICATE }}
-          PS6_REGISTRY_KEY: ${{ vars.PS6_REGISTRY_KEY }}
         run: |
           echo "Pushing to GHCR.."
           rockcraft.skopeo --insecure-policy copy oci-archive:$(ls *.rock) docker://${{ steps.image_url.outputs.ghcr_image_url }} --dest-creds ${{ github.repository_owner }}:${{ secrets.GITHUB_TOKEN }}
-
-          echo "Pushing to private registry.."
-          mkdir cert
-          echo "$PS6_REGISTRY_KEY" > cert/client.key
-          echo "$PS6_REGISTRY_CERTIFICATE" > cert/client.cert
-          echo "$PS6_REGISTRY_CA" > cert/ca.crt
-          env -i no_proxy=10.142.8.140 /snap/rockcraft/current/bin/skopeo --insecure-policy copy oci-archive:$(ls *.rock) docker://${{ steps.image_url.outputs.private_image_url }} --dest-cert-dir cert --dest-username admin --dest-password password
 
   charmcraft-pack:
     runs-on: ubuntu-latest
@@ -235,5 +223,7 @@ jobs:
         run: |
           export JUJU_MODEL=admin/$JUJU_MODEL
           echo "Deploying to $JUJU_MODEL"
-          ls -lha
-          juju refresh specs-canonical-com --path=./$CHARM_FILE --resource app-image=${{ needs.rockcraft-pack.outputs.private_image_url}}
+          echo "{\"ImageName\": \"${{ needs.rockcraft-pack.outputs.image_url }}\", \"username\":\"${{ secrets.GHCR_READ_USERNAME }}\", \"password\":\"${{ secrets.GHCR_READ_TOKEN }}\"}" > ./image_metadata.json
+          cat ./image_metadata.json
+          ls -la
+          juju refresh specs-canonical-com --path=./charm_amd64.charm --resource app-image=./image_metadata.json
