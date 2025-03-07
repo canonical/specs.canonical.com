@@ -10,7 +10,7 @@ import (
 
 	"github.com/canonical/specs-v2.canonical.com/config"
 	"github.com/canonical/specs-v2.canonical.com/db"
-	"github.com/canonical/specs-v2.canonical.com/googledrive"
+	"github.com/canonical/specs-v2.canonical.com/google"
 	"github.com/canonical/specs-v2.canonical.com/specs"
 )
 
@@ -31,7 +31,7 @@ func main() {
 
 	logger.Info("migrations completed successfully")
 
-	googleDrive, err := googledrive.NewGoogleDrive(googledrive.Config{
+	googleDrive, err := google.NewGoogleDrive(google.Config{
 		ClientID:          "112404606310881291739",
 		ClientEmail:       "specs-reader@roadmap-270011.iam.gserviceaccount.com",
 		ClientX509CertURL: "https://www.googleapis.com/robot/v1/metadata/x509/specs-reader%40roadmap-270011.iam.gserviceaccount.com",

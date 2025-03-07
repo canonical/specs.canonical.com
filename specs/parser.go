@@ -60,48 +60,51 @@ func (s *SyncService) Parse(ctx context.Context, logger *slog.Logger, workerItem
 		SyncedAt:           time.Now(),
 	}
 
-	specsMetadatabTable, err := s.DriveClient.DocumentFirstTable(ctx, file.File.Id)
-	if err != nil {
-		return fmt.Errorf("failed to get first table: %w", err)
-	}
-	logger.Debug("metadata table", "table", specsMetadatabTable)
-	for key, values := range specsMetadatabTable {
-		switch key {
-		case "title":
-			if specTitle == "" {
-				specTitle = values[0]
-			}
-		case "index":
-			if specId == "" {
-				specId = values[0]
-			}
-		case "status":
-			newSpec.Status = &values[0]
-		case "authors":
-			newSpec.Authors = []string{}
-			for _, value := range values {
-				for _, author := range strings.FieldsFunc(value, AuthorsSplit) {
-					// remove email <..@..>
-					author = strings.TrimSpace(author)
-					author = strings.Split(author, "<")[0]
-					author = strings.TrimSpace(author)
+	// specsMetadatabTable, err := s.GoogleClient.DocumentFirstTable(ctx, file.File.Id)
+	// if err != nil {
+	// 	return fmt.Errorf("failed to get first table: %w", err)
+	// }
 
-					// remove (PjM)..
-					if strings.HasPrefix(author, "(") {
-						continue
-					}
+	// TODO: update table parsing to use the new table format
 
-					formattedAuthor := strings.TrimSpace(author)
-					authorValid := len(formattedAuthor) > 4
-					if authorValid {
-						newSpec.Authors = append(newSpec.Authors, formattedAuthor)
-					}
-				}
-			}
-		case "type":
-			newSpec.SpecType = &values[0]
-		}
-	}
+	// for key, values := range specsMetadatabTable {
+	// 	switch key {
+	// 	case "title":
+	// 		if specTitle == "" {
+	// 			specTitle = values[0]
+	// 		}
+	// 	case "index":
+	// 		if specId == "" {
+	// 			specId = values[0]
+	// 		}
+	// 	case "status":
+	// 		newSpec.Status = &values[0]
+	// 	case "authors":
+	// 		newSpec.Authors = []string{}
+	// 		for _, value := range values {
+	// 			for _, author := range strings.FieldsFunc(value, AuthorsSplit) {
+	// 				// remove email <..@..>
+	// 				author = strings.TrimSpace(author)
+	// 				author = strings.Split(author, "<")[0]
+	// 				author = strings.TrimSpace(author)
+
+	// 				// remove (PjM)..
+	// 				if strings.HasPrefix(author, "(") {
+	// 					continue
+	// 				}
+
+	// 				formattedAuthor := strings.TrimSpace(author)
+	// 				authorValid := len(formattedAuthor) > 4
+	// 				if authorValid {
+	// 					newSpec.Authors = append(newSpec.Authors, formattedAuthor)
+	// 				}
+	// 			}
+	// 		}
+	// 	case "type":
+	// 		newSpec.SpecType = &values[0]
+	// 	}
+	// }
+
 	logger.Debug("creating spec", "specs", newSpec)
 	if err := s.DB.Where(db.Spec{ID: newSpec.ID}).Assign(newSpec).FirstOrCreate(&newSpec).Error; err != nil {
 		return fmt.Errorf("failed to upsert spec: %w", err)

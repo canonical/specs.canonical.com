@@ -1,4 +1,4 @@
-package googledrive
+package google
 
 import (
 	"fmt"

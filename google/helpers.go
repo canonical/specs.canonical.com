@@ -1,4 +1,4 @@
-package googledrive
+package google
 
 import (
 	"context"
@@ -18,7 +18,7 @@ type FileResult struct {
 }
 
 // ListFilesChannel streams files matching the provided query options through a channel
-func (g *GoogleDrive) ListFilesChannel(ctx context.Context, opts QueryOptions) <-chan FileResult {
+func (g *Google) ListFilesChannel(ctx context.Context, opts QueryOptions) <-chan FileResult {
 	resultChan := make(chan FileResult)
 
 	go func() {
@@ -77,7 +77,7 @@ func (g *GoogleDrive) ListFilesChannel(ctx context.Context, opts QueryOptions) <
 }
 
 // GetSubFoldersChannel streams subfolders of the provided folder ID through a channel
-func (g *GoogleDrive) GetSubFoldersChannel(ctx context.Context, folderID string) <-chan FileResult {
+func (g *Google) GetSubFoldersChannel(ctx context.Context, folderID string) <-chan FileResult {
 	qb := NewQueryBuilder()
 	query := qb.IsFolder().
 		InParent(folderID).
@@ -99,7 +99,7 @@ func (g *GoogleDrive) GetSubFoldersChannel(ctx context.Context, folderID string)
 }
 
 // GetFilesInFolderChannel streams files in the provided folder ID through a channel
-func (g *GoogleDrive) GetFilesInFolderChannel(ctx context.Context, folderID string) <-chan FileResult {
+func (g *Google) GetFilesInFolderChannel(ctx context.Context, folderID string) <-chan FileResult {
 	qb := NewQueryBuilder()
 	query := qb.NotTrashed().
 		InParent(folderID).
@@ -127,7 +127,7 @@ func (g *GoogleDrive) GetFilesInFolderChannel(ctx context.Context, folderID stri
 }
 
 // ExportFile exports a Google Doc to markdown format
-func (g *GoogleDrive) ExportFile(ctx context.Context, fileID string, format string) (string, error) {
+func (g *Google) ExportFile(ctx context.Context, fileID string, format string) (string, error) {
 	resp, err := g.DriveService.Files.Export(fileID, format).Context(ctx).Download()
 	if err != nil {
 		return "", err
@@ -145,34 +145,60 @@ func (g *GoogleDrive) ExportFile(ctx context.Context, fileID string, format stri
 }
 
 // DocumentFirstTable gets the first table in a Google Doc
-func (g *GoogleDrive) DocumentFirstTable(ctx context.Context, fileID string) (map[string][]string, error) {
+func (g *Google) DocumentFirstTable(ctx context.Context, fileID string) ([][]string, error) {
 	content, err := g.ExportFile(ctx, fileID, MimeTypeHTML)
 	if err != nil {
 		return nil, err
 	}
-	tableMap := make(map[string][]string)
 
-	document, err := goquery.NewDocumentFromReader(strings.NewReader(content))
+	doc, err := goquery.NewDocumentFromReader(strings.NewReader(content))
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse HTML document: %w", err)
+		return nil, err
 	}
 
-	document.Find("table").First().Find("tr").Each(func(i int, s *goquery.Selection) {
-		key := strings.ToLower(strings.TrimSpace(s.Find("td").First().Text()))
-		valuesNodes := s.Find("td").Last().Find("p > span")
-		values := make([]string, 0, valuesNodes.Length())
-		valuesNodes.Each(func(i int, s *goquery.Selection) {
-			trimmedValue := strings.TrimSpace(s.Text())
-			if trimmedValue != "" {
-				values = append(values, trimmedValue)
+	table := doc.Find("table").First()
+
+	if table.Length() == 0 {
+		return nil, fmt.Errorf("no table found in the document")
+	}
+
+	var result [][]string
+
+	table.Find("tr").Each(func(i int, row *goquery.Selection) {
+		var rowData []string
+
+		// Extract text from each cell (both th and td) in the row
+		row.Find("th, td").Each(func(j int, cell *goquery.Selection) {
+			// Check if the cell contains any mailto links (user badges)
+			mailtoLinks := cell.Find("a[href^='mailto:']")
+			if mailtoLinks.Length() > 0 {
+				var emails []string
+				mailtoLinks.Each(func(k int, link *goquery.Selection) {
+					href, exists := link.Attr("href")
+					if exists {
+						email := strings.TrimPrefix(href, "mailto:")
+						emails = append(emails, email)
+					}
+				})
+				if len(emails) > 0 {
+					rowData = append(rowData, strings.Join(emails, ","))
+				} else {
+					rowData = append(rowData, strings.TrimSpace(cell.Text()))
+				}
+			} else {
+				// default to text content otherwise
+				rowData = append(rowData, strings.TrimSpace(cell.Text()))
 			}
 		})
 
-		if key != "" && len(values) > 0 {
-			tableMap[key] = values
+		if len(rowData) > 0 {
+			result = append(result, rowData)
 		}
 	})
 
-	return tableMap, nil
+	if len(result) == 0 {
+		return nil, fmt.Errorf("table found but no data could be extracted")
+	}
 
+	return result, nil
 }
