@@ -34,7 +34,7 @@ tasks:
 
   run:
     description: "Run the application"
-    deps: ["tools", "build"]
+    deps: ["tools", "build", "build_ui"]
     cmds:
       - go run cmd/api/main.go
 
