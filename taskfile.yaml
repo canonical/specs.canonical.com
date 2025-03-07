@@ -67,13 +67,11 @@ tasks:
   build_ui:
     description: "Build the UI"
     deps: ["tools"]
+    status:
+      - test -d ui/dist
     cmds:
-      - cd ui && if [ ! -d dist ]; then
-          echo "Building the UI...";
-          bun install && bun run build;
-        else
-          echo "UI already built";
-        fi
+      - task rebuild_ui
+
 
   rebuild_ui:
     description: "Re-build the UI"
