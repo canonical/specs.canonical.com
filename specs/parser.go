@@ -16,10 +16,8 @@ func (s *SyncService) Parse(ctx context.Context, logger *slog.Logger, workerItem
 
 	logger.Debug("processing file")
 
-	// google doc title: format {id} - {title}
 	parts := strings.SplitN(file.File.Name, "-", 2)
-	var specId string
-	var specTitle string
+	var specId, specTitle string
 	if len(parts) == 2 {
 		specId, specTitle = strings.TrimSpace(parts[0]), strings.TrimSpace(parts[1])
 	}
@@ -36,7 +34,6 @@ func (s *SyncService) Parse(ctx context.Context, logger *slog.Logger, workerItem
 	}
 	googleDocCreatedAt := parsedTime
 
-	// check if spec hasn't changed since last sync
 	if !s.Config.ForceSync {
 		var updatedAt time.Time
 		s.DB.Model(&db.Spec{}).Where("id = ?", specId).Pluck("google_doc_updated_at", &updatedAt)
@@ -60,50 +57,21 @@ func (s *SyncService) Parse(ctx context.Context, logger *slog.Logger, workerItem
 		SyncedAt:           time.Now(),
 	}
 
-	// specsMetadatabTable, err := s.GoogleClient.DocumentFirstTable(ctx, file.File.Id)
-	// if err != nil {
-	// 	return fmt.Errorf("failed to get first table: %w", err)
-	// }
+	specsMetadataTable, err := s.GoogleClient.DocumentFirstTable(ctx, file.File.Id)
+	if err != nil {
+		return fmt.Errorf("failed to get first table: %w", err)
+	}
+	logger.Debug("metadata table", "table", specsMetadataTable)
 
-	// TODO: update table parsing to use the new table format
+	if len(specsMetadataTable) == 0 {
+		return fmt.Errorf("metadata table is empty")
+	}
 
-	// for key, values := range specsMetadatabTable {
-	// 	switch key {
-	// 	case "title":
-	// 		if specTitle == "" {
-	// 			specTitle = values[0]
-	// 		}
-	// 	case "index":
-	// 		if specId == "" {
-	// 			specId = values[0]
-	// 		}
-	// 	case "status":
-	// 		newSpec.Status = &values[0]
-	// 	case "authors":
-	// 		newSpec.Authors = []string{}
-	// 		for _, value := range values {
-	// 			for _, author := range strings.FieldsFunc(value, AuthorsSplit) {
-	// 				// remove email <..@..>
-	// 				author = strings.TrimSpace(author)
-	// 				author = strings.Split(author, "<")[0]
-	// 				author = strings.TrimSpace(author)
-
-	// 				// remove (PjM)..
-	// 				if strings.HasPrefix(author, "(") {
-	// 					continue
-	// 				}
-
-	// 				formattedAuthor := strings.TrimSpace(author)
-	// 				authorValid := len(formattedAuthor) > 4
-	// 				if authorValid {
-	// 					newSpec.Authors = append(newSpec.Authors, formattedAuthor)
-	// 				}
-	// 			}
-	// 		}
-	// 	case "type":
-	// 		newSpec.SpecType = &values[0]
-	// 	}
-	// }
+	if isColumnFormat(specsMetadataTable) {
+		parseColumnBasedMetadata(specsMetadataTable, &newSpec)
+	} else {
+		parseRowBasedMetadata(specsMetadataTable, &newSpec)
+	}
 
 	logger.Debug("creating spec", "specs", newSpec)
 	if err := s.DB.Where(db.Spec{ID: newSpec.ID}).Assign(newSpec).FirstOrCreate(&newSpec).Error; err != nil {
@@ -111,6 +79,98 @@ func (s *SyncService) Parse(ctx context.Context, logger *slog.Logger, workerItem
 	}
 
 	return nil
+}
+
+func isColumnFormat(table [][]string) bool {
+	expectedKeys := []string{"type", "author(s)", "status", "created"}
+	if len(table) < 4 {
+		return false
+	}
+
+	foundKeys := 0
+	for _, cell := range table[2] {
+		for _, expected := range expectedKeys {
+			if strings.EqualFold(cell, expected) {
+				foundKeys++
+				break
+			}
+		}
+	}
+	return foundKeys == len(expectedKeys)
+}
+
+func parseRowBasedMetadata(table [][]string, spec *db.Spec) {
+	for _, row := range table {
+		if len(row) < 2 {
+			continue
+		}
+		key := strings.ToLower(row[0])
+		value := row[1]
+
+		switch key {
+		case "title":
+			if spec.Title == nil || *spec.Title == "" {
+				spec.Title = &value
+			}
+		case "index":
+			if spec.ID == "" {
+				spec.ID = value
+			}
+		case "status":
+			spec.Status = &value
+		case "authors":
+			spec.Authors = parseAuthors([]string{value})
+		case "type":
+			spec.SpecType = &value
+		}
+	}
+}
+
+func parseColumnBasedMetadata(table [][]string, spec *db.Spec) {
+	if len(table) < 4 {
+		return
+	}
+
+	keysRow := table[2]
+	valuesRow := table[3]
+	if len(keysRow) != len(valuesRow) {
+		return
+	}
+
+	for i, key := range keysRow {
+		key = strings.ToLower(key)
+		value := valuesRow[i]
+
+		switch key {
+		case "title":
+			if spec.Title == nil || *spec.Title == "" {
+				spec.Title = &value
+			}
+		case "index":
+			if spec.ID == "" {
+				spec.ID = value
+			}
+		case "status":
+			spec.Status = &value
+		case "author(s)":
+			spec.Authors = parseAuthors([]string{value})
+		case "type":
+			spec.SpecType = &value
+		}
+	}
+}
+
+func parseAuthors(values []string) []string {
+	authors := []string{}
+	for _, value := range values {
+		for _, author := range strings.FieldsFunc(value, AuthorsSplit) {
+			author = strings.TrimSpace(strings.Split(author, "<")[0])
+			if len(author) > 4 {
+				authors = append(authors, author)
+			}
+		}
+	}
+	return authors
 }
 
 func AuthorsSplit(r rune) bool {
