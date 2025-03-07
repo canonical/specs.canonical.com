@@ -25,7 +25,7 @@ tasks:
 
   build:
     description: "Build the application"
-    deps: ["tools"]
+    deps: ["tools", "build_ui"]
     cmds:
       - echo "Building the application..."
       - go build -o bin/api cmd/api/main.go
@@ -34,7 +34,7 @@ tasks:
 
   run:
     description: "Run the application"
-    deps: ["tools", "build", "build_ui"]
+    deps: ["tools", "build"]
     cmds:
       - go run cmd/api/main.go
 
@@ -67,6 +67,15 @@ tasks:
   build_ui:
     description: "Build the UI"
     deps: ["tools"]
+    status:
+      - test -d ui/dist
+    cmds:
+      - task: rebuild_ui
+
+
+  rebuild_ui:
+    description: "Re-build the UI"
+    deps: [ "tools" ]
     cmds:
       - echo "Building the UI..."
       - cd ui && bun install  && bun run build
