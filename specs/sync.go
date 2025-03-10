@@ -7,16 +7,16 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/canonical/specs-v2.canonical.com/googledrive"
+	"github.com/canonical/specs-v2.canonical.com/google"
 	"gorm.io/gorm"
 )
 
 // SyncService handles the synchronization of specification documents from Google Drive
 type SyncService struct {
-	Logger      *slog.Logger
-	DriveClient *googledrive.GoogleDrive
-	DB          *gorm.DB
-	Config      SyncConfig
+	Logger       *slog.Logger
+	GoogleClient *google.Google
+	DB           *gorm.DB
+	Config       SyncConfig
 
 	FailedCount  int
 	SkippedCount int
@@ -30,17 +30,17 @@ type SyncConfig struct {
 }
 
 type WorkerItem struct {
-	File         googledrive.FileResult
-	ParentFolder googledrive.FileResult
+	File         google.FileResult
+	ParentFolder google.FileResult
 }
 
 // NewSyncService creates a new specification synchronization service
-func NewSyncService(logger *slog.Logger, driveClient *googledrive.GoogleDrive, db *gorm.DB, config SyncConfig) *SyncService {
+func NewSyncService(logger *slog.Logger, driveClient *google.Google, db *gorm.DB, config SyncConfig) *SyncService {
 	return &SyncService{
-		Logger:      logger.With("component", "specs_sync"),
-		DriveClient: driveClient,
-		DB:          db,
-		Config:      config,
+		Logger:       logger.With("component", "specs_sync"),
+		GoogleClient: driveClient,
+		DB:           db,
+		Config:       config,
 	}
 }
 
@@ -89,7 +89,7 @@ func (s *SyncService) SyncSpecs(ctx context.Context) error {
 	}
 
 	// Process folders and send files to workers
-	folderChan := s.DriveClient.GetSubFoldersChannel(ctx, s.Config.RootFolderID)
+	folderChan := s.GoogleClient.GetSubFoldersChannel(ctx, s.Config.RootFolderID)
 	totalCount := int32(0)
 	go func() {
 		defer close(workerItems)
@@ -105,7 +105,7 @@ func (s *SyncService) SyncSpecs(ctx context.Context) error {
 				continue
 			}
 
-			subFolderFilesChan := s.DriveClient.GetFilesInFolderChannel(ctx, folder.File.Id)
+			subFolderFilesChan := s.GoogleClient.GetFilesInFolderChannel(ctx, folder.File.Id)
 			logger.Info("processing folder")
 
 			folderCount := 0

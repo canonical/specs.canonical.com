@@ -1,17 +1,21 @@
-package googledrive
+package google
 
 import (
 	"context"
+	"net/http"
 
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"golang.org/x/oauth2/jwt"
+	"google.golang.org/api/docs/v1"
 	"google.golang.org/api/drive/v3"
 	"google.golang.org/api/option"
 )
 
-type GoogleDrive struct {
+type Google struct {
+	Client       *http.Client
 	DriveService *drive.Service
+	DocsService  *docs.Service
 }
 
 type Config struct {
@@ -24,7 +28,7 @@ type Config struct {
 }
 
 // NewGoogleDrive creates a new GoogleDrive client
-func NewGoogleDrive(config Config) (*GoogleDrive, error) {
+func NewGoogleDrive(config Config) (*Google, error) {
 	jwtConfig := &jwt.Config{
 		Email:        config.ClientEmail,
 		PrivateKey:   []byte(config.PrivateKey),
@@ -41,6 +45,11 @@ func NewGoogleDrive(config Config) (*GoogleDrive, error) {
 		return nil, err
 	}
 
+	docsService, err := docs.NewService(context.Background(), option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
+
 	// verify the connection and credentials
 	_, err = driveService.About.Get().Fields("user").Do()
 
@@ -48,8 +57,10 @@ func NewGoogleDrive(config Config) (*GoogleDrive, error) {
 		return nil, err
 	}
 
-	return &GoogleDrive{
+	return &Google{
+		Client:       client,
 		DriveService: driveService,
+		DocsService:  docsService,
 	}, nil
 }
 
