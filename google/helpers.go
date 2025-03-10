@@ -144,7 +144,27 @@ func (g *Google) ExportFile(ctx context.Context, fileID string, format string) (
 	return markdown, nil
 }
 
-// DocumentFirstTable gets the first table in a Google Doc
+// DocumentFirstTable extracts the first table from a Google Document and converts it into a 2D string array.
+// It takes a context and a file ID as input parameters and returns a 2D slice of strings representing
+// the table's content.
+//
+// The function performs the following steps:
+// 1. Exports the Google Document as HTML using the provided file ID.
+// 2. Parses the HTML content to find the first table element.
+// 3. Iterates over each row ("tr") in the table.
+// 4. For each row, extracts the text content from each cell ("th" and "td").
+// 5. If a cell contains mailto links, it extracts the email addresses and joins them with commas.
+// 6. Appends the extracted row data to the result slice.
+//
+// If no table is found or no data could be extracted, it returns an error.
+//
+// Parameters:
+// - ctx: The context for the request.
+// - fileID: The ID of the Google Document file.
+//
+// Returns:
+// - A 2D slice of strings representing the table's content.
+// - An error if any issues occur during the extraction process.
 func (g *Google) DocumentFirstTable(ctx context.Context, fileID string) ([][]string, error) {
 	content, err := g.ExportFile(ctx, fileID, MimeTypeHTML)
 	if err != nil {

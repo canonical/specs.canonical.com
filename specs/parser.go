@@ -81,6 +81,37 @@ func (s *SyncService) Parse(ctx context.Context, logger *slog.Logger, workerItem
 	return nil
 }
 
+// isColumnFormat checks if the given table has the old specification design or the new one.
+// Old design is row-based, where each row contains a key-value pair. Where the table will look like:
+/*
+[
+ 	["authors", "user1@canonical,user2@canonical.com,user3@canonical"],
+	["created", "2021-09-13"],
+	["index", "SN114"]
+]
+*/
+// And the new design is column-based, where the table will look like:
+/*
+[
+	["Index", "PR001", "", ""],
+	["Title", "Specifications - Purpose and Guidance"],
+	["Type", "Author(s)", "Status", "Created"],
+	[
+		"Process",
+		"user1@canonical.com,user2@canonical.com,user3@canonical.com",
+		"Approved",
+		"Apr 22, 2021"
+	],
+	["", "Reviewer(s)", "Status", "Date"],
+	["", "user4@canonical.com", "Approved", "Aug 11, 2023"],
+	["", "user3@canonical.com", "Approved", "Aug 11, 2023"],
+	["", "user2@canonical.com", "Approved", "Aug 11, 2023"],
+	["", "user1@canonical.com", "Approved", "Jul 11, 2023"]
+]
+*/
+// The function expects that the table's third row (index 2) should contain the column headers.
+// The expected column headers are "type", "author(s)", "status", and "created".
+// The function returns true if column headers are found in the, and false otherwise.
 func isColumnFormat(table [][]string) bool {
 	expectedKeys := []string{"type", "author(s)", "status", "created"}
 	if len(table) < 4 {
