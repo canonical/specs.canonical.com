@@ -198,8 +198,6 @@ jobs:
           name: ${{ env.CHARM_BUILD_NAME }}
 
       - name: Configure Vault and Juju
-        # TODO: remove condition once production env is ready
-        if: inputs.environment != 'Production'
         env:
           VAULT_ADDR: ${{ vars.VAULT_ADDR }}
           VAULT_SECRET_PATH_ROLE: ${{ vars.VAULT_SECRET_PATH_ROLE }}
@@ -216,8 +214,6 @@ jobs:
           printf "controllers:\n  $JUJU_CONTROLLER:\n    user: %s\n    password: %s\n" "$USERNAME" "$PASSWORD" > ~/.local/share/juju/accounts.yaml
 
       - name: Deploy charm
-        # TODO: remove condition once production env is ready
-        if: inputs.environment != 'Production'
         env:
           JUJU_MODEL: ${{ vars.JUJU_MODEL }}
         run: |
