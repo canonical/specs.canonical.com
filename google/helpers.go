@@ -192,16 +192,13 @@ func (g *Google) DocumentFirstTable(ctx context.Context, fileID string) ([][]str
 			// Check if the cell contains any mailto links (user badges)
 			mailtoLinks := cell.Find("a[href^='mailto:']")
 			if mailtoLinks.Length() > 0 {
-				var emails []string
+				var authors []string
 				mailtoLinks.Each(func(k int, link *goquery.Selection) {
-					href, exists := link.Attr("href")
-					if exists {
-						email := strings.TrimPrefix(href, "mailto:")
-						emails = append(emails, email)
-					}
+					authorName := strings.TrimSpace(link.Text())
+					authors = append(authors, authorName)
 				})
-				if len(emails) > 0 {
-					rowData = append(rowData, strings.Join(emails, ","))
+				if len(authors) > 0 {
+					rowData = append(rowData, strings.Join(authors, ","))
 				} else {
 					rowData = append(rowData, strings.TrimSpace(cell.Text()))
 				}

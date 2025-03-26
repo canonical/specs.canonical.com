@@ -1,4 +1,8 @@
-import { CheckboxInput, Select } from "@canonical/react-components";
+import {
+  CheckboxInput,
+  Select,
+  CustomSelect,
+} from "@canonical/react-components";
 import { useFormik } from "formik";
 import React, { useEffect } from "react";
 import { SPEC_STATUSES, SPEC_TYPES } from "../pages/Specs";
@@ -31,16 +35,17 @@ const Filters = ({
 
   return (
     <form onSubmit={formik.handleSubmit}>
-      <Select
+      <CustomSelect
         value={formik.values.team}
         label="Team"
         name="team"
         id="team"
+        searchable="always"
         options={[
           { value: "", label: "All teams" },
           ...teams.map((team) => ({ label: team, value: team })),
         ]}
-        onChange={formik.handleChange}
+        onChange={(value) => formik.setFieldValue("team", value)}
       />
       <p className="u-no-margin--bottom">Status</p>
       {[...SPEC_STATUSES].map((status) => (
@@ -64,16 +69,17 @@ const Filters = ({
           checked={formik.values.type?.includes(typeName)}
         />
       ))}
-      <Select
+      <CustomSelect
         value={formik.values.author}
         label="Author"
         name="author"
         id="author"
+        searchable="always"
         options={[
           { value: "", label: "All authors" },
           ...authors.map((author) => ({ label: author, value: author })),
         ]}
-        onChange={formik.handleChange}
+        onChange={(value) => formik.setFieldValue("author", value)}
       />
       <Select
         value={formik.values.orderBy}

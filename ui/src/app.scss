@@ -114,8 +114,12 @@ $increase-font-size-on-larger-screens: false;
   max-width: calc(2 * 14rem + $grid-max-width) !important;
 }
 
+.p-custom-select__dropdown {
+  max-width: 16rem;
+}
+
 .p-search-box__input {
-  width: 20rem;
+  max-width: 16rem;
 
   @media screen and (max-width: $breakpoint-small - 1) {
     width: 100%;
