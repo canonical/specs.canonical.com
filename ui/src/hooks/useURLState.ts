@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 
 export type UserOptions = {
   filter: any;
-  searchQuery: string;
+  searchQuery: string | null;
 };
 
 const useURLState = () => {
@@ -23,7 +23,7 @@ const useURLState = () => {
         author: searchState?.filter?.author || null,
         orderBy: searchState?.filter?.orderBy || null,
       },
-      searchQuery: searchState?.searchQuery || "",
+      searchQuery: searchState?.searchQuery || null,
     };
   };
 
@@ -37,8 +37,10 @@ const useURLState = () => {
       skipNulls: true,
       allowEmptyArrays: false,
     });
-    const newURL = window.location.pathname + "?" + queryParams;
-    history.pushState(null, "", newURL);
+    if (queryParams) {
+      const newURL = window.location.pathname + "?" + queryParams;
+      history.pushState(null, "", newURL);
+    }
   }, [userOptions]);
 
   return { userOptions, setUserOptions };
