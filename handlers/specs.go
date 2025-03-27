@@ -55,7 +55,11 @@ func (r *ListSpecsRequest) setDefaults() {
 		r.OrderBy = "created_at"
 	}
 	if r.OrderDir == "" {
-		r.OrderDir = "asc"
+		if r.OrderBy == "updated_at" || r.OrderBy == "created_at" {
+			r.OrderDir = "desc"
+		} else {
+			r.OrderDir = "asc"
+		}
 	}
 }
 
