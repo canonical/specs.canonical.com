@@ -101,6 +101,9 @@ func (s *Server) ListSpecs(c echo.Context) error {
 	if req.OrderBy == "created_at" {
 		req.OrderBy = "google_doc_created_at"
 	}
+	if req.OrderBy == "updated_at" {
+		req.OrderBy = "google_doc_updated_at"
+	}
 
 	if req.SearchQuery != "" {
 		searchConfig := "english" // or any other language configuration
