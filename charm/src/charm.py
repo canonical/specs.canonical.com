@@ -28,7 +28,8 @@ class SpecsCharm(paas_charm.go.Charm):
             charm=self,
             service_hostname=self.app.name,
             service_name=self.app.name,
-            service_port=self._workload_config.port
+            service_port=self._workload_config.port,
+            path_routes="/"
         )
 
     def _on_ingress_ready(self, *args: typing.Any) -> None:
