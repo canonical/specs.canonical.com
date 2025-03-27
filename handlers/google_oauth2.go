@@ -23,7 +23,7 @@ type GoogleUser struct {
 }
 
 func (s *Server) initGoogleOAuth() *oauth2.Config {
-	callbackURL, _ := url.JoinPath(s.Config.BaseURL, "/auth/google/callback")
+	callbackURL, _ := url.JoinPath(s.Config.CustomBaseURL, "/auth/google/callback")
 	return &oauth2.Config{
 		ClientID:     s.Config.GoogleOAuthClientID,
 		ClientSecret: s.Config.GoogleOAuthClientSecret,

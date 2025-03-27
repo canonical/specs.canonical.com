@@ -36,7 +36,7 @@ config:
       type: string
       default: production
       description: "The environment the service is running in. enum: `[development, production]`"
-    BASE_URL:
+    CUSTOM_BASE_URL:
       type: string
       default: "http://localhost:8080"
       description: "The base url for the service."

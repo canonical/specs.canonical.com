@@ -14,9 +14,9 @@ type Config struct {
 	AppSecretKey string `env:"required"`
 	Host         string `env:"default:localhost"`
 
-	BaseURL  string `env:"required"`
-	AppEnv   string `env:"required,enums:development;production"`
-	LogLevel string `env:"default:debug,enums:debug;info;warn;error"`
+	CustomBaseURL string `env:"required"`
+	AppEnv        string `env:"required,enums:development;production"`
+	LogLevel      string `env:"default:debug,enums:debug;info;warn;error"`
 
 	PostgresqlDbConnectString string `env:"required"`
 
