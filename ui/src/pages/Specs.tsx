@@ -123,7 +123,7 @@ function Specs() {
             <div className="l-fluid-breakout__toolbar-item">
               <input
                 type="search"
-                value={userOptions.searchQuery}
+                value={userOptions.searchQuery || undefined}
                 onChange={(e) =>
                   setUserOptions({
                     ...userOptions,

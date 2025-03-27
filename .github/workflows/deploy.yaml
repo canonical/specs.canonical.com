@@ -85,7 +85,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ./*.rock
-          key: ${{ runner.os}}-rock-${{ hashFiles('**/*.go', '**/*.ts(x)') }}
+          key: ${{ runner.os}}-rock-${{ hashFiles('**') }}
 
       - name: Setup LXD
         if: steps.rock-cache.outputs.cache-hit != 'true'
