@@ -31,10 +31,10 @@ class SpecsCharm(paas_charm.go.Charm):
             service_port=self._workload_config.port
         )
 
-    def _on_ingress_ready(self, _: ops.HookEvent) -> None:
+    def _on_ingress_ready(self, *args: typing.Any) -> None:
         return
 
-    def _on_ingress_address_changed(self, _: ops.Event) -> None:
+    def _on_ingress_address_changed(self, *args: typing.Any) -> None:
         return
 
 
