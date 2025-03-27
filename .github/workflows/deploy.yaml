@@ -121,7 +121,7 @@ jobs:
           rockcraft.skopeo --insecure-policy copy oci-archive:$(ls *.rock) docker://${{ steps.image_url.outputs.ghcr_image_url }} --dest-creds ${{ github.repository_owner }}:${{ secrets.GITHUB_TOKEN }}
 
   charmcraft-pack:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: commit-check
     steps:
       - name: Checkout code
@@ -136,7 +136,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ./*.charm
-          key: ${{ runner.os}}-charm-${{ hashFiles('./charm/**') }}
+          key: ${{ runner.os}}-charmcraft-${{ hashFiles('./charm/**') }}
 
       - name: Install charmcraft
         if: steps.charm-cache.outputs.cache-hit != 'true'
@@ -147,7 +147,10 @@ jobs:
         if: steps.charm-cache.outputs.cache-hit != 'true'
         id: charmcraft-pack
         run: |
-          sudo charmcraft pack -v --destructive-mode --project-dir ./charm
+          # --project-dir option doesn't work with destructive-mode
+          cd ./charm
+          sudo charmcraft pack -v --destructive-mode
+          mv *.charm ../
 
       - name: Upload charm file
         uses: actions/upload-artifact@v4

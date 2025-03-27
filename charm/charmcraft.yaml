@@ -4,11 +4,11 @@
 name: charm
 
 type: charm
-
 base: ubuntu@24.04
-
 platforms:
   amd64:
+    build-on: [amd64]
+    build-for: [amd64]
 
 summary: The Google sync and ui service for Canonical specifications.
 
@@ -18,6 +18,9 @@ extensions:
   - go-framework
 
 requires:
+  nginx-route:
+    interface: nginx-route
+    limit: 1
   postgresql:
     interface: postgresql_client
     optional: false
