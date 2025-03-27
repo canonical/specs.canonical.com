@@ -138,10 +138,6 @@ jobs:
           path: ./*.charm
           key: ${{ runner.os}}-charm-${{ hashFiles('./charm/**') }}
 
-      - name: Setup LXD
-        if: steps.charm-cache.outputs.cache-hit != 'true'
-        uses: canonical/setup-lxd@main
-
       - name: Install charmcraft
         if: steps.charm-cache.outputs.cache-hit != 'true'
         run: |
@@ -151,7 +147,7 @@ jobs:
         if: steps.charm-cache.outputs.cache-hit != 'true'
         id: charmcraft-pack
         run: |
-          sudo charmcraft pack -v --project-dir ./charm
+          sudo charmcraft pack -v --destructive-mode --project-dir ./charm
 
       - name: Upload charm file
         uses: actions/upload-artifact@v4
