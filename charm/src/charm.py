@@ -9,6 +9,7 @@ import typing
 
 import ops
 import paas_charm.go
+from charms.nginx_ingress_integrator.v0.nginx_route import require_nginx_route
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +24,18 @@ class SpecsCharm(paas_charm.go.Charm):
             args: passthrough to CharmBase.
         """
         super().__init__(*args)
+        require_nginx_route(
+            charm=self,
+            service_hostname=self.app.name,
+            service_name=self.app.name,
+            service_port=self._workload_config.port
+        )
+
+    def _on_ingress_ready(self, _: ops.HookEvent) -> None:
+        return
+
+    def _on_ingress_address_changed(self, _: ops.Event) -> None:
+        return
 
 
 if __name__ == "__main__":

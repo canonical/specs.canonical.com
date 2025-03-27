@@ -1,0 +1,6 @@
+{
+  "python.analysis.extraPaths": ["./charm/lib"],
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.autopep8"
+  }
+}
