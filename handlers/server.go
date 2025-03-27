@@ -68,6 +68,17 @@ func NewServer(logger *slog.Logger, config *config.Config, db *gorm.DB) *Server 
 	fsys, _ := fs.Sub(ui.UIAssets, "dist")
 	staticHandler := http.FileServer(http.FS(fsys))
 	e.GET("/assets/*", echo.WrapHandler(staticHandler), server.AuthMiddleware)
+
+	// Handle favicon.ico requests
+	e.GET("/favicon.ico", func(c echo.Context) error {
+		favicon, err := fsys.Open("favicon.ico")
+		if err != nil {
+			return c.NoContent(http.StatusNotFound)
+		}
+		defer favicon.Close()
+		return c.Stream(http.StatusOK, "image/x-icon", favicon)
+	}, server.AuthMiddleware)
+
 	// Serve index.html for all other routes to support client-side routing
 	e.GET("*", func(c echo.Context) error {
 		indexFile, err := fsys.Open("index.html")
