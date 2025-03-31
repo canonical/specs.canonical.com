@@ -1,5 +1,5 @@
 import qs from "qs";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export type UserOptions = {
   filter: any;
@@ -31,15 +31,27 @@ const useURLState = () => {
     decodeQueryParam()
   );
 
+  const previousQueryParams = useRef<string | null>(null);
+
   useEffect(() => {
     const queryParams = qs.stringify(userOptions, {
       arrayFormat: "repeat",
       skipNulls: true,
       allowEmptyArrays: false,
     });
+    if (
+      previousQueryParams.current &&
+      previousQueryParams.current === queryParams
+    ) {
+      return;
+    }
+    previousQueryParams.current = queryParams;
+
     if (queryParams) {
       const newURL = window.location.pathname + "?" + queryParams;
       history.pushState(null, "", newURL);
+    } else {
+      history.pushState(null, "", window.location.pathname);
     }
   }, [userOptions]);
 

@@ -1,12 +1,13 @@
 import {
   CheckboxInput,
-  Select,
   CustomSelect,
+  MultiSelect,
+  Select,
 } from "@canonical/react-components";
 import { useFormik } from "formik";
-import React, { useEffect } from "react";
-import { SPEC_STATUSES, SPEC_TYPES } from "../pages/Specs";
+import { useEffect } from "react";
 import type { UserOptions } from "../hooks/useURLState";
+import { SPEC_STATUSES, SPEC_TYPES } from "../pages/Specs";
 
 type FiltersProps = {
   authors: string[];
@@ -48,16 +49,35 @@ const Filters = ({
         onChange={(value) => formik.setFieldValue("team", value)}
       />
       <p className="u-no-margin--bottom">Status</p>
-      {[...SPEC_STATUSES].map((status) => (
-        <CheckboxInput
-          key={status}
-          label={status}
-          name="status"
-          value={status}
-          onChange={formik.handleChange}
-          checked={formik.values.status?.includes(status)}
-        />
-      ))}
+      {/* @ts-ignore: for some reason ReactNode type is not working */}
+      <MultiSelect
+        placeholder="Select status"
+        variant="condensed"
+        items={[...SPEC_STATUSES].map((status) => ({
+          label: status,
+          value: status,
+        }))}
+        selectedItems={
+          typeof formik.values.status === "string"
+            ? [
+                {
+                  label: formik.values.status,
+                  value: formik.values.status,
+                },
+              ]
+            : formik.values.status
+            ? formik.values.status.map((status: string) => ({
+                label: status,
+                value: status,
+              }))
+            : []
+        }
+        onItemsUpdate={(items) => {
+          formik.setFieldValue("status", [
+            ...new Set([...items.map((item) => item.value)]),
+          ]);
+        }}
+      />
       <p className="u-no-margin--bottom">Type</p>
       {[...SPEC_TYPES].map((typeName) => (
         <CheckboxInput

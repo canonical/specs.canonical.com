@@ -79,6 +79,10 @@ $increase-font-size-on-larger-screens: false;
   max-width: 16rem;
 }
 
+.multi-select .multi-select__select-button {
+  margin-bottom: 1.25rem;
+}
+
 
 #no-results {
   grid-column: 1 / -1;
