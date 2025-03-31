@@ -4,57 +4,18 @@ $increase-font-size-on-larger-screens: false;
 @import "vanilla-framework";
 @include vanilla;
 
-.spec-card {
-  display: flex;
-  flex-direction: column;
-  border-top: 3px solid #666;
-  border-top-color: $color-negative !important;
-  height: 100%;
+:root {
+  --spec-preview-backdrop: rgba(0, 0, 0, 0.25);
+  --spec-preview-header-horizontal-padding: 1rem;
+  --spec-preview-header-vertical-padding: 1.25rem;
+  --spec-preview-header-border-color: $color-mid-dark;
+  --spec-card-background-color: $color-light;
+  --spec-card-default-border-color: $color-negative
+  --spec-card-draft-border-color: $color-mid-dark;
+  --spec-card-pending-border-color: $color-caution;
+  --spec-card-active-border-color: $color-positive;
 }
 
-.spec-card__header {
-  display: flex;
-  justify-content: space-between;
-}
-
-.spec-card__status {
-  height: fit-content;
-}
-
-.spec-card__metadata-list {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  align-self: center;
-  flex-grow: 1;
-  margin: 0;
-}
-
-.spec-card--drafting,
-.spec-card--braindump {
-  border-top-color: $color-mid-dark !important;
-}
-
-.spec-card--pending {
-  border-top-color: $color-caution !important;
-}
-
-.spec-card--active,
-.spec-card--completed,
-.spec-card--approved {
-  border-top-color: $color-positive !important;
-}
-
-.spec-card__content {
-  flex-grow: 1;
-}
-
-.spec-card__footer {
-  align-items: center;
-  background-color: $color-light;
-  display: flex;
-  justify-content: space-between;
-}
 
 .p-content {
   position: relative;
@@ -88,7 +49,7 @@ $increase-font-size-on-larger-screens: false;
   }
 
   .l-fluid-breakout__toolbar {
-    padding: 2rem 0;
+    margin-block-start: 1rem;
   }
 
   @media screen and (max-width: $breakpoint-small - 1) {
@@ -118,105 +79,9 @@ $increase-font-size-on-larger-screens: false;
   max-width: 16rem;
 }
 
-.p-search-box__input {
-  max-width: 16rem;
-
-  @media screen and (max-width: $breakpoint-small - 1) {
-    width: 100%;
-  }
-}
 
 #no-results {
   grid-column: 1 / -1;
-}
-
-.spec-aside {
-  position: fixed;
-  background-color: #fff;
-  height: 100%;
-  width: 50% !important;
-  right: 0;
-  top: 0;
-  z-index: 12;
-  animation: sideDrawer 0.3s ease-in;
-
-  @keyframes sideDrawer {
-    from {
-      transform: translateX(100%);
-    }
-    to {
-      transform: translateX(0);
-    }
-  }
-
-  .spec-container {
-    padding: $spv--large $sph--large;
-    position: relative;
-    z-index: 1;
-    max-width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    background-color: $colors--light-theme--background-default;
-
-    .spec-preview {
-      overflow: auto;
-      flex: 1;
-
-      iframe {
-        border: none;
-        width: 100%;
-        height: 100%;
-      }
-    }
-
-    .p-button--positive {
-      width: fit-content;
-      margin-left: auto;
-      margin-top: $spv--medium;
-    }
-
-    .metadata-type {
-      text-transform: capitalize;
-    }
-  }
-
-  @media screen and (max-width: $breakpoint-large - 1) {
-    width: 90% !important;
-  }
-}
-
-.spec-aside-backdrop {
-  position: fixed;
-  top: 0;
-  right: 0;
-  height: 100%;
-  width: 100%;
-  z-index: 11;
-  background-color: $spec-preview-backdrop;
-}
-
-.spec__title-container {
-  align-items: center;
-  gap: 1rem;
-  flex-wrap: wrap;
-  margin-bottom: 1.1rem;
-
-  .spec__metadata {
-    text-transform: capitalize;
-  }
-}
-
-.spinner-container {
-  height: 100%;
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-body.spec-preview-open {
-  overflow-y: hidden;
 }
 
 .error-screen {

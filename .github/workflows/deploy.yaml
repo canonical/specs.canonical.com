@@ -28,7 +28,7 @@ on:
 # VAULT_SECRET_PATH_COMMON (relative path)
 #
 ## Secrets:
-#  VAULT_APPROLE_RILE_ID (uuid)
+#  VAULT_APPROLE_ROLE_ID (uuid)
 #  VAULT_APPROLE_SECRET_ID (uuid)
 
 env:

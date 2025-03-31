@@ -1,6 +1,7 @@
 import {
   Navigation,
   Notification,
+  SearchBox,
   Spinner,
   Theme,
 } from "@canonical/react-components";
@@ -8,7 +9,7 @@ import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import qs from "qs";
 import InfiniteScroll from "react-infinite-scroll-component";
 import Filters from "../components/Filters";
-import SpecCard from "../components/SpecCard";
+import { SpecCard } from "../components/SpecCard";
 import type { ListSpecsResponse } from "../generated/types";
 import useURLState from "../hooks/useURLState";
 import { sortedSet } from "../utils";
@@ -97,7 +98,7 @@ function Specs() {
         logo={{
           src: "https://assets.ubuntu.com/v1/82818827-CoF_white.svg",
           title: "Specifications",
-          url: "#",
+          url: "/",
         }}
         items={
           [
@@ -117,9 +118,9 @@ function Specs() {
       <main className="l-fluid-breakout">
         <div className="l-fluid-breakout__toolbar">
           <div className="l-fluid-breakout__toolbar-items">
-            <div className="l-fluid-breakout__toolbar-item">
+            <h4 className="l-fluid-breakout__toolbar-item p-muted-heading">
               {totalSpecs} specs
-            </div>
+            </h4>
             <div className="l-fluid-breakout__toolbar-item">
               <input
                 type="search"

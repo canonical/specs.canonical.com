@@ -1,8 +1,8 @@
-import { Button } from "@canonical/react-components";
 import clsx from "clsx";
-import FocusTrap from "focus-trap-react";
-import React, { useEffect, useState } from "react";
-import type { Spec } from "../generated/types";
+import React, { useState } from "react";
+import type { Spec } from "../../generated/types";
+import { SpecPreviewSidePanel } from "../SpecPreviewSidePanel";
+import "./styles.scss";
 
 type SpecCardProps = {
   spec: Spec;
@@ -21,15 +21,6 @@ const SpecCard = ({ spec }: SpecCardProps) => {
   const handleKeyDown = (event: React.KeyboardEvent) => {
     if (event.key == "Enter") setViewSpecsDetails(true);
   };
-
-  useEffect(() => {
-    // disable global scroll when modal is open
-    if (viewSpecsDetails) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "auto";
-    }
-  }, [viewSpecsDetails]);
 
   return (
     <>
@@ -92,67 +83,11 @@ const SpecCard = ({ spec }: SpecCardProps) => {
           </div>
         </div>
       </div>
-      {viewSpecsDetails && (
-        <FocusTrap
-          active={viewSpecsDetails}
-          focusTrapOptions={{ fallbackFocus: ".spec-aside-backdrop" }}
-        >
-          <div
-            className="spec-aside-backdrop"
-            onClick={() => setViewSpecsDetails(false)}
-          >
-            <aside
-              className="spec-aside l-aside is-wide"
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="spec-preview"
-              aria-describedby="spec-preview"
-              onClick={(e: React.SyntheticEvent) => e.stopPropagation()}
-            >
-              <div className="spec-container">
-                <section className="p-strip is-bordered is-shallow">
-                  <small className="spec-card__metadata-list">
-                    <ul className="header p-inline-list--middot u-no-margin--bottom">
-                      <li className="p-inline-list__item">{spec.id}</li>
-                      <li className="p-inline-list__item">{spec.team}</li>
-                      <li className="p-inline-list__item metadata-type">
-                        {spec.spec_type}
-                      </li>
-                    </ul>
-                    <Button
-                      appearance="brand"
-                      element="a"
-                      href={spec.google_doc_url}
-                      target="_blank"
-                      className="u-no-margin--bottom"
-                    >
-                      Open in Google Docs
-                    </Button>
-                  </small>
-                  <button
-                    className="p-modal__close"
-                    aria-label="Close spec preview"
-                    onClick={() => setViewSpecsDetails(false)}
-                  >
-                    Close
-                  </button>
-                </section>
-                <div className="spec-preview">
-                  <iframe
-                    title={spec.title}
-                    src={
-                      spec.google_doc_url.replace("edit", "preview") +
-                      "&embedded=true"
-                    }
-                    height="100%"
-                    width="100%"
-                  ></iframe>
-                </div>
-              </div>
-            </aside>
-          </div>
-        </FocusTrap>
-      )}
+      <SpecPreviewSidePanel
+        viewSpecsDetails={viewSpecsDetails}
+        onClose={() => setViewSpecsDetails(false)}
+        spec={spec}
+      />
     </>
   );
 };

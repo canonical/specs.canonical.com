@@ -1,0 +1,51 @@
+.spec-card {
+  display: flex;
+  flex-direction: column;
+  border-top: 3px solid #666;
+  border-top-color: var(--spec-card-default-border-color) !important;
+  height: 100%;
+}
+
+.spec-card__header {
+  display: flex;
+  justify-content: space-between;
+}
+
+.spec-card__status {
+  height: fit-content;
+}
+
+.spec-card__metadata-list {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  align-self: center;
+  flex-grow: 1;
+  margin: 0;
+}
+
+.spec-card--drafting,
+.spec-card--braindump {
+  border-top-color: var(--spec-card-draft-border-color) !important;
+}
+
+.spec-card--pending {
+  border-top-color: var(--spec-card-pending-border-color) !important;
+}
+
+.spec-card--active,
+.spec-card--completed,
+.spec-card--approved {
+  border-top-color: var(--spec-card-active-border-color) !important;
+}
+
+.spec-card__content {
+  flex-grow: 1;
+}
+
+.spec-card__footer {
+  align-items: center;
+  background-color: var(--spec-card-background-color);
+  display: flex;
+  justify-content: space-between;
+}

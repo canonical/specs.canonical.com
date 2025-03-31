@@ -8,7 +8,6 @@ const style: BunPlugin = {
   async setup(build) {
     const path = build.config.entrypoints[0];
     const fileContent = await globalThis.Bun.file(path).text();
-    console.log("fileContent", fileContent);
     const contents = sass.compileString(fileContent);
     globalThis.Bun.write(`${outDir}/assets/style.css`, contents.css);
 
