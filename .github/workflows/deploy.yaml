@@ -223,5 +223,5 @@ jobs:
           ls -la
           # run the deploy command
           # in a fresh environment first
-          # juju deploy ./charm_amd64.charm --resource app-image=./image_metadata.json specs-canonical-com
-          juju refresh specs-canonical-com --path=./charm_amd64.charm --resource app-image=./image_metadata.json
+          juju deploy ./charm_amd64.charm --resource app-image=./image_metadata.json specs-canonical-com
+          # juju refresh specs-canonical-com --path=./charm_amd64.charm --resource app-image=./image_metadata.json
