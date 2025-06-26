@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/canonical/specs-v2.canonical.com/db"
+	"github.com/google/uuid"
 )
 
 func (s *SyncService) Parse(ctx context.Context, logger *slog.Logger, workerItem *WorkerItem) error {
@@ -78,6 +79,18 @@ func (s *SyncService) Parse(ctx context.Context, logger *slog.Logger, workerItem
 		return fmt.Errorf("failed to upsert spec: %w", err)
 	}
 
+	logger.Debug("clear old reviweres")
+	if err := s.DB.Where("spec_id = ?", newSpec.ID).Delete(&db.Reviewer{}).Error; err != nil {
+		return fmt.Errorf("failed to clear old reviewers: %w", err)
+	}
+
+	logger.Debug("inserting spec reviewers")
+	for _, reviewer := range newSpec.Reviewers {
+		if err := s.DB.Create(&reviewer).Error; err != nil {
+			return fmt.Errorf("failed to insert reviewer: %w", err)
+		}
+	}
+
 	return nil
 }
 
@@ -112,6 +125,7 @@ func (s *SyncService) Parse(ctx context.Context, logger *slog.Logger, workerItem
 // The function expects that the table's third row (index 2) should contain the column headers.
 // The expected column headers are "type", "author(s)", "status", and "created".
 // The function returns true if column headers are found in the, and false otherwise.
+// The function will then check the fifth row (index 4) and following for the reviewers information.
 func isColumnFormat(table [][]string) bool {
 	expectedKeys := []string{"type", "author(s)", "status", "created"}
 	if len(table) < 4 {
@@ -189,6 +203,42 @@ func parseColumnBasedMetadata(table [][]string, spec *db.Spec) {
 			spec.SpecType = &value
 		}
 	}
+
+	reviewerHeaderRow := table[4]
+	if len(table) < 5 {
+		return
+	}
+
+	reviewerNameIdx := -1
+    for i, col := range reviewerHeaderRow {
+        if strings.ToLower(col) == "reviewer(s)" {
+            reviewerNameIdx = i
+            break
+        }
+    }
+    if reviewerNameIdx == -1 {
+        return
+    }
+
+    var reviewers []db.Reviewer
+    for _, row := range table[5:] {
+        if len(row) != len(reviewerHeaderRow) {
+			continue
+		}
+		reviewer := strings.TrimSpace(row[reviewerNameIdx])
+		status := strings.TrimSpace(row[reviewerNameIdx+1])
+		if len(reviewer) > 4 {
+			reviewers = append(reviewers, db.Reviewer{
+				ID:     uuid.NewString(),
+				SpecID: spec.ID,
+				Name:   &reviewer,
+				Status: &status,
+			})
+		}
+    }
+    if len(reviewers) > 0 {
+        spec.Reviewers = reviewers
+    }
 }
 
 func parseAuthors(values []string) []string {

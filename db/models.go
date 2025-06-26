@@ -12,6 +12,7 @@ type Spec struct {
 	Title              *string        `gorm:"type:text"`
 	Status             *string        `gorm:"type:text"`
 	Authors            pq.StringArray `gorm:"type:text[]"`
+	Reviewers          []Reviewer     `gorm:"foreignKey:SpecID"`
 	SpecType           *string        `gorm:"type:text;column:spec_type"`
 	Team               string         `gorm:"type:text;not null"`
 	GoogleDocID        string         `gorm:"type:text;not null;column:google_doc_id"`
@@ -24,9 +25,16 @@ type Spec struct {
 	SyncedAt           time.Time      `gorm:"not null;default:CURRENT_TIMESTAMP"`
 }
 
+type Reviewer struct {
+	ID     string  `gorm:"type:text;primaryKey"`
+	SpecID string  `gorm:"type:text;index"`
+	Name   *string `gorm:"type:text"`
+	Status *string `gorm:"type:text"`
+}
+
 func Migrate(db *gorm.DB) error {
 	// Create the specs table
-	if err := db.AutoMigrate(&Spec{}); err != nil {
+	if err := db.AutoMigrate(&Spec{}, &Reviewer{}); err != nil {
 		return err
 	}
 
