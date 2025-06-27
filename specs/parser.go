@@ -204,25 +204,25 @@ func parseColumnBasedMetadata(table [][]string, spec *db.Spec) {
 		}
 	}
 
-	reviewerHeaderRow := table[4]
 	if len(table) < 5 {
 		return
 	}
 
+	reviewerHeaderRow := table[4]
 	reviewerNameIdx := -1
-    for i, col := range reviewerHeaderRow {
-        if strings.ToLower(col) == "reviewer(s)" {
-            reviewerNameIdx = i
-            break
-        }
-    }
-    if reviewerNameIdx == -1 {
-        return
-    }
+	for i, col := range reviewerHeaderRow {
+		if strings.ToLower(col) == "reviewer(s)" {
+			reviewerNameIdx = i
+			break
+		}
+	}
+	if reviewerNameIdx == -1 {
+		return
+	}
 
-    var reviewers []db.Reviewer
-    for _, row := range table[5:] {
-        if len(row) != len(reviewerHeaderRow) {
+	var reviewers []db.Reviewer
+	for _, row := range table[5:] {
+		if len(row) != len(reviewerHeaderRow) {
 			continue
 		}
 		reviewer := strings.TrimSpace(row[reviewerNameIdx])
@@ -235,10 +235,10 @@ func parseColumnBasedMetadata(table [][]string, spec *db.Spec) {
 				Status: &status,
 			})
 		}
-    }
-    if len(reviewers) > 0 {
-        spec.Reviewers = reviewers
-    }
+	}
+	if len(reviewers) > 0 {
+		spec.Reviewers = reviewers
+	}
 }
 
 func parseAuthors(values []string) []string {
