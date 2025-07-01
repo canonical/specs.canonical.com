@@ -79,7 +79,7 @@ func (s *SyncService) Parse(ctx context.Context, logger *slog.Logger, workerItem
 		return fmt.Errorf("failed to upsert spec: %w", err)
 	}
 
-	logger.Debug("clear old reviweres")
+	logger.Debug("clear old reviewers")
 	if err := s.DB.Where("spec_id = ?", newSpec.ID).Delete(&db.Reviewer{}).Error; err != nil {
 		return fmt.Errorf("failed to clear old reviewers: %w", err)
 	}

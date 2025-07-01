@@ -62,5 +62,6 @@ func Rollback(db *gorm.DB) error {
         DROP TRIGGER IF EXISTS update_specs_updated_at ON specs;
         DROP FUNCTION IF EXISTS update_specs_updated_at_column();
         DROP TABLE IF EXISTS specs;
+		DROP TABLE IF EXISTS reviewers;
     `).Error
 }
