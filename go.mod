@@ -6,6 +6,7 @@ require (
 	github.com/PuerkitoBio/goquery v1.10.0
 	github.com/fatih/color v1.18.0
 	github.com/go-playground/validator v9.31.0+incompatible
+	github.com/google/uuid v1.6.0
 	github.com/labstack/echo/v4 v4.12.0
 	github.com/lib/pq v1.10.9
 	golang.org/x/oauth2 v0.24.0
@@ -26,7 +27,6 @@ require (
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/google/s2a-go v0.1.8 // indirect
-	github.com/google/uuid v1.6.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.4 // indirect
 	github.com/googleapis/gax-go/v2 v2.14.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
