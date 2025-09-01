@@ -227,6 +227,13 @@ func parseColumnBasedMetadata(table [][]string, spec *db.Spec) {
 		}
 		reviewer := strings.TrimSpace(row[reviewerNameIdx])
 		status := strings.TrimSpace(row[reviewerNameIdx+1])
+
+		parts := strings.FieldsFunc(reviewer, AuthorsSplit)
+		if len(parts) != 1 {
+			// ignore if multiple reviewers in one cell
+			continue
+		}
+
 		if len(reviewer) > 4 {
 			reviewers = append(reviewers, db.Reviewer{
 				ID:     uuid.NewString(),
