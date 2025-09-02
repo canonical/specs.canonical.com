@@ -68,10 +68,17 @@ func (s *SyncService) Parse(ctx context.Context, logger *slog.Logger, workerItem
 		return fmt.Errorf("metadata table is empty")
 	}
 
+	var warnings []string
 	if isColumnFormat(specsMetadataTable) {
-		parseColumnBasedMetadata(specsMetadataTable, &newSpec)
+		parseColumnBasedMetadata(specsMetadataTable, &newSpec, &warnings)
 	} else {
 		parseRowBasedMetadata(specsMetadataTable, &newSpec)
+	}
+
+	for _, msg := range warnings {
+		if err := s.GoogleClient.AddDocComment(ctx, newSpec.GoogleDocID, msg); err != nil {
+			logger.Debug("failed to add doc comment", "err", err)
+		}
 	}
 
 	logger.Debug("creating spec", "specs", newSpec)
@@ -171,7 +178,7 @@ func parseRowBasedMetadata(table [][]string, spec *db.Spec) {
 	}
 }
 
-func parseColumnBasedMetadata(table [][]string, spec *db.Spec) {
+func parseColumnBasedMetadata(table [][]string, spec *db.Spec, warnings *[]string) {
 	if len(table) < 4 {
 		return
 	}
@@ -221,7 +228,7 @@ func parseColumnBasedMetadata(table [][]string, spec *db.Spec) {
 	}
 
 	var reviewers []db.Reviewer
-	for _, row := range table[5:] {
+	for idx, row := range table[5:] {
 		if len(row) != len(reviewerHeaderRow) {
 			continue
 		}
@@ -230,10 +237,13 @@ func parseColumnBasedMetadata(table [][]string, spec *db.Spec) {
 
 		parts := strings.FieldsFunc(reviewer, AuthorsSplit)
 		if len(parts) != 1 {
-			// ignore if multiple reviewers in one cell
-			continue
+			if warnings != nil {
+				*warnings = append(*warnings, fmt.Sprintf(
+					"Invalid reviewers entry in row %d: %q. Please use one reviewer per row.",
+					idx+5, reviewer))
+				continue
+			}
 		}
-
 		if len(reviewer) > 4 {
 			reviewers = append(reviewers, db.Reviewer{
 				ID:     uuid.NewString(),
