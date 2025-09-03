@@ -58,6 +58,17 @@ func (s *SyncService) Parse(ctx context.Context, logger *slog.Logger, workerItem
 		SyncedAt:           time.Now(),
 	}
 
+	// Fallback when the file title doesn't contain "ID - Title".
+	if newSpec.ID == "" {
+		newSpec.ID = file.File.Id
+		if err = s.GoogleClient.AddDocComment(ctx, newSpec.GoogleDocID,
+			"This spec is missing an ID in the document title. Please rename to 'ID - Title' format."); err != nil {
+			logger.Debug("failed to add doc comment", "err", err)
+		}
+		logger.Warn("specId missing; using GoogleDocID as fallback",
+			"docId", file.File.Id, "name", file.File.Name)
+	}
+
 	specsMetadataTable, err := s.GoogleClient.DocumentFirstTable(ctx, file.File.Id)
 	if err != nil {
 		return fmt.Errorf("failed to get first table: %w", err)
