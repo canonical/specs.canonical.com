@@ -46,3 +46,7 @@ config:
     GOOGLE_OAUTH:
       type: secret
       description: "The client_id and client_secret for the Google oauth service account."
+    SYNC_INTERVAL:
+      type: string
+      default: 15m
+      description: "The interval at which the sync job runs."
