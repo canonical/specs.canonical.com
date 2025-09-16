@@ -77,6 +77,16 @@ function Specs() {
     refetchOnMount: false,
   });
 
+  const { data: reviewersData } = useQuery({
+    queryKey: ["reviewers"],
+    queryFn: async () => {
+      const res = await fetch("/api/specs/reviewers");
+      return res.json() as Promise<string[]>;
+    },
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+  });
+
   const { data: teamsData } = useQuery({
     queryKey: ["teams"],
     queryFn: async () => {
@@ -87,6 +97,7 @@ function Specs() {
     refetchOnMount: false,
   });
   const authors = authorsData || [];
+  const reviewers = reviewersData || [];
   const teams = teamsData || [];
 
   return (
@@ -141,6 +152,7 @@ function Specs() {
           <Filters
             authors={sortedSet(new Set(authors))}
             teams={sortedSet(new Set(teams))}
+            reviewers={sortedSet(new Set(reviewers))}
             userOptions={userOptions}
             setUserOptions={setUserOptions}
           />

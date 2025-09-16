@@ -11,6 +11,7 @@ import { SPEC_STATUSES, SPEC_TYPES } from "../pages/Specs";
 
 type FiltersProps = {
   authors: string[];
+  reviewers: string[];
   teams: string[];
   userOptions: UserOptions;
   setUserOptions: (options: UserOptions) => void;
@@ -18,6 +19,7 @@ type FiltersProps = {
 
 const Filters = ({
   authors,
+  reviewers,
   teams,
   userOptions,
   setUserOptions,
@@ -100,6 +102,18 @@ const Filters = ({
           ...authors.map((author) => ({ label: author, value: author })),
         ]}
         onChange={(value) => formik.setFieldValue("author", value)}
+      />
+      <CustomSelect
+        value={formik.values.reviewer}
+        label="Reviewer"
+        name="reviewer"
+        id="reviewer"
+        searchable="always"
+        options={[
+          { value: "", label: "All reviewers" },
+          ...reviewers.map((reviewer) => ({ label: reviewer, value: reviewer })),
+        ]}
+        onChange={(value) => formik.setFieldValue("reviewer", value)}
       />
       <Select
         value={formik.values.orderBy}

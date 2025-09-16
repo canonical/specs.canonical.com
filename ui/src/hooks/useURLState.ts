@@ -21,6 +21,7 @@ const useURLState = () => {
         status: searchState?.filter?.status || null,
         type: searchState?.filter?.type || null,
         author: searchState?.filter?.author || null,
+        reviewer: searchState?.filter?.reviewer || null,
         orderBy: searchState?.filter?.orderBy || null,
       },
       searchQuery: searchState?.searchQuery || null,
