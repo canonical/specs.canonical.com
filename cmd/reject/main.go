@@ -14,6 +14,7 @@ import (
 	"github.com/canonical/specs-v2.canonical.com/google"
 	"github.com/canonical/specs-v2.canonical.com/specs"
 	"github.com/google/uuid"
+	"google.golang.org/api/drive/v3"
 )
 
 func main() {
@@ -38,26 +39,22 @@ func main() {
 
 	// Create Google client with write access for document updates
 	// Only if not in dry-run mode
-	var googleDrive *google.Google
+	var scopes []string
 	if dryRun {
-		googleDrive, err = google.NewGoogleDrive(google.Config{
-			ClientID:          "112404606310881291739",
-			ClientEmail:       "specs-reader@roadmap-270011.iam.gserviceaccount.com",
-			ClientX509CertURL: "https://www.googleapis.com/robot/v1/metadata/x509/specs-reader%40roadmap-270011.iam.gserviceaccount.com",
-			PrivateKey:        c.GooglePrivateKey,
-			PrivateKeyID:      c.GooglePrivateKeyID,
-			ProjectID:         "roadmap-270011",
-		})
+		scopes = []string{drive.DriveReadonlyScope}
 	} else {
-		googleDrive, err = google.NewGoogleDriveWithWriteAccess(google.Config{
-			ClientID:          "112404606310881291739",
-			ClientEmail:       "specs-reader@roadmap-270011.iam.gserviceaccount.com",
-			ClientX509CertURL: "https://www.googleapis.com/robot/v1/metadata/x509/specs-reader%40roadmap-270011.iam.gserviceaccount.com",
-			PrivateKey:        c.GooglePrivateKey,
-			PrivateKeyID:      c.GooglePrivateKeyID,
-			ProjectID:         "roadmap-270011",
-		})
+		scopes = []string{drive.DriveScope}
 	}
+
+	googleDrive, err := google.NewGoogleDrive(google.Config{
+		ClientID:          "112404606310881291739",
+		ClientEmail:       "specs-reader@roadmap-270011.iam.gserviceaccount.com",
+		ClientX509CertURL: "https://www.googleapis.com/robot/v1/metadata/x509/specs-reader%40roadmap-270011.iam.gserviceaccount.com",
+		PrivateKey:        c.GooglePrivateKey,
+		PrivateKeyID:      c.GooglePrivateKeyID,
+		ProjectID:         "roadmap-270011",
+		Scopes:            scopes,
+	})
 	if err != nil {
 		logger.Error("failed to create google drive client", "error", err.Error())
 		os.Exit(1)

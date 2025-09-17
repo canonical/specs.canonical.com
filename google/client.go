@@ -25,6 +25,7 @@ type Config struct {
 	PrivateKey        string
 	PrivateKeyID      string
 	ProjectID         string
+	Scopes            []string
 }
 
 // NewGoogleDrive creates a new GoogleDrive client
@@ -33,44 +34,7 @@ func NewGoogleDrive(config Config) (*Google, error) {
 		Email:        config.ClientEmail,
 		PrivateKey:   []byte(config.PrivateKey),
 		PrivateKeyID: config.PrivateKeyID,
-		Scopes:       []string{drive.DriveReadonlyScope},
-		TokenURL:     google.JWTTokenURL,
-	}
-
-	tokenSource := jwtConfig.TokenSource(context.Background())
-	client := oauth2.NewClient(context.Background(), tokenSource)
-	driveService, err := drive.NewService(context.Background(), option.WithHTTPClient(client))
-
-	if err != nil {
-		return nil, err
-	}
-
-	docsService, err := docs.NewService(context.Background(), option.WithHTTPClient(client))
-	if err != nil {
-		return nil, err
-	}
-
-	// verify the connection and credentials
-	_, err = driveService.About.Get().Fields("user").Do()
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &Google{
-		Client:       client,
-		DriveService: driveService,
-		DocsService:  docsService,
-	}, nil
-}
-
-// NewGoogleDriveWithWriteAccess creates a new GoogleDrive client with write permissions
-func NewGoogleDriveWithWriteAccess(config Config) (*Google, error) {
-	jwtConfig := &jwt.Config{
-		Email:        config.ClientEmail,
-		PrivateKey:   []byte(config.PrivateKey),
-		PrivateKeyID: config.PrivateKeyID,
-		Scopes:       []string{drive.DriveScope},
+		Scopes:       config.Scopes,
 		TokenURL:     google.JWTTokenURL,
 	}
 

@@ -12,6 +12,7 @@ import (
 	"github.com/canonical/specs-v2.canonical.com/db"
 	"github.com/canonical/specs-v2.canonical.com/google"
 	"github.com/canonical/specs-v2.canonical.com/specs"
+	"google.golang.org/api/drive/v3"
 )
 
 func main() {
@@ -38,6 +39,7 @@ func main() {
 		PrivateKey:        c.GooglePrivateKey,
 		PrivateKeyID:      c.GooglePrivateKeyID,
 		ProjectID:         "roadmap-270011",
+		Scopes:            []string{drive.DriveReadonlyScope},
 	})
 
 	if err != nil {
