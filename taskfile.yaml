@@ -44,6 +44,12 @@ tasks:
     cmds:
       - go run cmd/sync/main.go
 
+  reject:
+    description: "Run the rejection worker"
+    deps: ["tools", "build"]
+    cmds:
+      - go run cmd/reject/main.go --dry-run
+
   dev:
     description: "Run the application in watch mode"
     deps: ["tools", "build"]
