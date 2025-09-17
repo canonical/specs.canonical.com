@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"flag"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -31,21 +30,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := db.Migrate(dbConn); err != nil {
-		log.Fatal(err)
-	}
-
-	logger.Info("migrations completed successfully")
-
 	// Create Google client with write access for document updates
-	// Only if not in dry-run mode
-	var scopes []string
-	if dryRun {
-		scopes = []string{drive.DriveReadonlyScope}
-	} else {
-		scopes = []string{drive.DriveScope}
-	}
-
 	googleDrive, err := google.NewGoogleDrive(google.Config{
 		ClientID:          "112404606310881291739",
 		ClientEmail:       "specs-reader@roadmap-270011.iam.gserviceaccount.com",
@@ -53,7 +38,7 @@ func main() {
 		PrivateKey:        c.GooglePrivateKey,
 		PrivateKeyID:      c.GooglePrivateKeyID,
 		ProjectID:         "roadmap-270011",
-		Scopes:            scopes,
+		Scopes:            []string{drive.DriveScope},
 	})
 	if err != nil {
 		logger.Error("failed to create google drive client", "error", err.Error())

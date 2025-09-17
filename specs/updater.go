@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"time"
 
 	"google.golang.org/api/docs/v1"
 )
@@ -175,7 +174,7 @@ func (r *RejectService) addRejectionNotice(ctx context.Context, docID string) er
 	cellContents := make([]string, numColumns)
 	cellContents[headerColumns["author"]] = "Specs Automations"
 	cellContents[headerColumns["status"]] = "Rejected"
-	cellContents[headerColumns["date"]] = time.Now().Format("Jan 02, 2006")
+	cellContents[headerColumns["date"]] = r.Config.TimeStamp
 	cellContents[headerColumns["comment"]] = fmt.Sprintf(
 		"This spec was rejected during the automated cleanup of stale documents (Cleanup ID: %s)",
 		r.Config.CleanupID,
