@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -12,11 +13,11 @@ import (
 	"github.com/canonical/specs-v2.canonical.com/db"
 	"github.com/canonical/specs-v2.canonical.com/google"
 	"github.com/canonical/specs-v2.canonical.com/specs"
-	"github.com/google/uuid"
 	"google.golang.org/api/drive/v3"
 )
 
 func main() {
+
 	var dryRun bool
 	flag.BoolVar(&dryRun, "dry-run", false, "perform a dry run without making actual changes")
 	flag.Parse()
@@ -30,6 +31,12 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err := db.Migrate(dbConn); err != nil {
+		log.Fatal(err)
+	}
+
+	logger.Info("migrations completed successfully")
+
 	// Create Google client with write access for document updates
 	googleDrive, err := google.NewGoogleDrive(google.Config{
 		ClientID:          "112404606310881291739",
@@ -40,6 +47,7 @@ func main() {
 		ProjectID:         "roadmap-270011",
 		Scopes:            []string{drive.DriveScope},
 	})
+
 	if err != nil {
 		logger.Error("failed to create google drive client", "error", err.Error())
 		os.Exit(1)
@@ -49,6 +57,15 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	rejectService := specs.NewRejectService(
+		logger,
+		googleDrive,
+		dbConn,
+		specs.RejectConfig{
+			DryRun: dryRun,
+		},
+	)
+
 	go func() {
 		sigChan := make(chan os.Signal, 1)
 		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
@@ -56,19 +73,15 @@ func main() {
 		logger.Info("received signal, shutting down", "signal", sig)
 		cancel()
 	}()
+	// Set up ticker for periodic runs
+	ticker := time.NewTicker(c.GetRejectInterval())
+	defer ticker.Stop()
 
-	rejectService := specs.NewRejectService(
-		logger,
-		googleDrive,
-		dbConn,
-		specs.RejectConfig{
-			DryRun:    dryRun,
-			TimeStamp: time.Now().Format("2006-01-02"),
-			CleanupID: uuid.New().String(),
-		},
-	)
+	firstTick := make(chan time.Time, 1)
+	firstTick <- time.Now()
 
-	logger.Info("starting spec rejection job",
+	logger.Info("starting rejection job",
+		"interval", c.GetRejectInterval(),
 		"dry_run", dryRun,
 		"pid", os.Getpid())
 
@@ -76,10 +89,25 @@ func main() {
 		logger.Info("DRY RUN MODE: No actual changes will be made")
 	}
 
+	// Run initial rejection
 	if err := rejectService.RejectAllStaleSpecs(ctx); err != nil {
 		logger.Error("spec rejection failed", "error", err)
-		os.Exit(1)
+	}
+	// Exit after initial dry run: no need to continue running on loop
+	if dryRun {
+		return
 	}
 
-	logger.Info("spec rejection job completed successfully")
+	// Wait for either context cancellation or ticker
+	for {
+		select {
+		case <-ctx.Done():
+			logger.Info("sync job stopped")
+			return
+		case <-ticker.C:
+			if err := rejectService.RejectAllStaleSpecs(ctx); err != nil {
+				logger.Error("sync failed", "error", err)
+			}
+		}
+	}
 }

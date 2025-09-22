@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"google.golang.org/api/docs/v1"
 )
@@ -15,7 +16,12 @@ type CellCoordinates struct {
 }
 
 // updateDocumentStatus updates the Google Doc to change status
-func (r *RejectService) updateDocumentStatus(ctx context.Context, docID string, coords *CellCoordinates, newStatus string) error {
+func (r *RejectService) updateDocumentStatus(
+	ctx context.Context,
+	docID string,
+	coords *CellCoordinates,
+	newStatus string,
+) error {
 	doc, err := r.GoogleClient.DocsService.Documents.Get(docID).Context(ctx).Do()
 	if err != nil {
 		return fmt.Errorf("failed to fetch document: %w", err)
@@ -77,7 +83,11 @@ func (r *RejectService) updateDocumentStatus(ctx context.Context, docID string, 
 }
 
 // addRejectionNotice appends a rejection notice to the spec's changelog table
-func (r *RejectService) addRejectionNotice(ctx context.Context, docID string) error {
+func (r *RejectService) addRejectionNotice(
+	ctx context.Context,
+	docID string,
+	cleanupID string,
+) error {
 	doc, err := r.GoogleClient.DocsService.Documents.Get(docID).Context(ctx).Do()
 	if err != nil {
 		return fmt.Errorf("failed to fetch updated document: %w", err)
@@ -116,20 +126,18 @@ func (r *RejectService) addRejectionNotice(ctx context.Context, docID string) er
 	}
 
 	tableIndex := changelogTable.TableRows[0].StartIndex - 1
-	rejectionRequests := []*docs.Request{
-		{
-			InsertTableRow: &docs.InsertTableRowRequest{
-				TableCellLocation: &docs.TableCellLocation{
-					TableStartLocation: &docs.Location{
-						Index: tableIndex, // Use the table's start index
-					},
-					RowIndex:    int64(len(changelogTable.TableRows) - 1), // Last row index
-					ColumnIndex: int64(0),                                 // Reference the first column
+	rejectionRequests := []*docs.Request{{
+		InsertTableRow: &docs.InsertTableRowRequest{
+			TableCellLocation: &docs.TableCellLocation{
+				TableStartLocation: &docs.Location{
+					Index: tableIndex, // Use the table's start index
 				},
-				InsertBelow: true,
+				RowIndex:    int64(len(changelogTable.TableRows) - 1), // Last row index
+				ColumnIndex: int64(0),                                 // Reference the first column
 			},
+			InsertBelow: true,
 		},
-	}
+	}}
 	_, err = r.GoogleClient.DocsService.Documents.BatchUpdate(docID, &docs.BatchUpdateDocumentRequest{
 		Requests: rejectionRequests,
 	}).Context(ctx).Do()
@@ -174,10 +182,10 @@ func (r *RejectService) addRejectionNotice(ctx context.Context, docID string) er
 	cellContents := make([]string, numColumns)
 	cellContents[headerColumns["author"]] = "Specs Automations"
 	cellContents[headerColumns["status"]] = "Rejected"
-	cellContents[headerColumns["date"]] = r.Config.TimeStamp
+	cellContents[headerColumns["date"]] = time.Now().Format("2006-01-02")
 	cellContents[headerColumns["comment"]] = fmt.Sprintf(
 		"This spec was rejected during the automated cleanup of stale documents (Cleanup ID: %s)",
-		r.Config.CleanupID,
+		cleanupID,
 	)
 
 	// Prepare text requests for cells
@@ -225,11 +233,15 @@ func (r *RejectService) addRejectionNotice(ctx context.Context, docID string) er
 }
 
 // createFallbackRejectionMessage creates a fallback rejection message with red text when changelog table is not available
-func (r *RejectService) addFallbackRejectionNotice(ctx context.Context, docID string) error {
+func (r *RejectService) addFallbackRejectionNotice(
+	ctx context.Context,
+	docID string,
+	cleanupID string,
+) error {
 	rejectionMessage := fmt.Sprintf(
 		"This spec was rejected during the automated cleanup of stale documents on %s. Cleanup ID: %s",
-		r.Config.TimeStamp,
-		r.Config.CleanupID,
+		time.Now().Format("2006-01-02"),
+		cleanupID,
 	)
 
 	rejectionRequests := []*docs.Request{

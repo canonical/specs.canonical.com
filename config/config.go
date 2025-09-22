@@ -26,7 +26,8 @@ type Config struct {
 	GoogleOAuthClientID     string `env:"required"`
 	GoogleOAuthClientSecret string `env:"required"`
 
-	SyncInterval string `env:"default:1h"`
+	SyncInterval   string `env:"default:1h"`
+	RejectInterval string `env:"default:24h"`
 }
 
 func (c *Config) IsProduction() bool {
@@ -43,6 +44,14 @@ func (c *Config) GetDBDSN() string {
 
 func (c *Config) GetSyncInterval() time.Duration {
 	d, err := time.ParseDuration(c.SyncInterval)
+	if err != nil {
+		panic(err)
+	}
+	return d
+}
+
+func (c *Config) GetRejectInterval() time.Duration {
+	d, err := time.ParseDuration(c.RejectInterval)
 	if err != nil {
 		panic(err)
 	}

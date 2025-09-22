@@ -9,6 +9,7 @@ import (
 
 	"github.com/canonical/specs-v2.canonical.com/db"
 	"github.com/canonical/specs-v2.canonical.com/google"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -21,9 +22,7 @@ type RejectService struct {
 }
 
 type RejectConfig struct {
-	DryRun    bool // If true, will log what would be done without making changes
-	TimeStamp string
-	CleanupID string
+	DryRun bool // If true, will log what would be done without making changes
 }
 
 // NewRejectService creates a new specification rejection service
@@ -36,11 +35,15 @@ func NewRejectService(logger *slog.Logger, googleClient *google.Google, db *gorm
 	}
 }
 
-// FindStaleSpecs identifies specifications that have "Drafting" or "Braindump" status
-func (r *RejectService) FindStaleSpecs(ctx context.Context) ([]*db.Spec, error) {
-	// TODO: add a time condition to only select specs that haven't been updated in a while
+// findStaleSpecs identifies specifications that have "Drafting" or "Braindump" status
+// and have not been updated in the last 30 days
+func (r *RejectService) findStaleSpecs() ([]*db.Spec, error) {
 	var specs []*db.Spec
-	err := r.DB.Where("status IN ?", []string{"Drafting", "Braindump"}).Find(&specs).Error
+	err := r.DB.
+		Where("status IN ?", []string{"Drafting", "Braindump"}).
+		Where("updated_at < ?", time.Now().Add(-30*24*time.Hour)).
+		Find(&specs).Error
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to query stale specs: %w", err)
 	}
@@ -50,7 +53,7 @@ func (r *RejectService) FindStaleSpecs(ctx context.Context) ([]*db.Spec, error) 
 
 // RejectAllStaleSpecs finds and rejects all stale specifications
 func (r *RejectService) RejectAllStaleSpecs(ctx context.Context) error {
-	specs, err := r.FindStaleSpecs(ctx)
+	specs, err := r.findStaleSpecs()
 	if err != nil {
 		return fmt.Errorf("failed to find stale specs: %w", err)
 	} else if len(specs) == 0 {
@@ -58,8 +61,9 @@ func (r *RejectService) RejectAllStaleSpecs(ctx context.Context) error {
 	}
 
 	rejectedCount, failedCount := 0, 0
+	cleanupID := uuid.New().String()
 	for _, spec := range specs {
-		err := r.RejectSpec(ctx, spec)
+		err := r.RejectSpec(ctx, spec, cleanupID)
 		if err != nil {
 			r.Logger.Error("failed to reject spec",
 				"spec_id", spec.ID,
@@ -79,7 +83,11 @@ func (r *RejectService) RejectAllStaleSpecs(ctx context.Context) error {
 }
 
 // RejectSpec updates a specification document to rejected status
-func (r *RejectService) RejectSpec(ctx context.Context, spec *db.Spec) error {
+func (r *RejectService) RejectSpec(
+	ctx context.Context,
+	spec *db.Spec,
+	cleanupID string,
+) error {
 	logger := r.Logger.With("spec_id", spec.ID, "doc_id", spec.GoogleDocID)
 	rejectedStatus := "Rejected"
 
@@ -112,8 +120,8 @@ func (r *RejectService) RejectSpec(ctx context.Context, spec *db.Spec) error {
 	logger.Info("successfully rejected spec")
 
 	// Add rejection notice to the document
-	if err = r.addRejectionNotice(ctx, spec.GoogleDocID); err != nil {
-		if err = r.addFallbackRejectionNotice(ctx, spec.GoogleDocID); err != nil {
+	if err = r.addRejectionNotice(ctx, spec.GoogleDocID, cleanupID); err != nil {
+		if err = r.addFallbackRejectionNotice(ctx, spec.GoogleDocID, cleanupID); err != nil {
 			logger.Error("failed to add fallback rejection notice", "error", err.Error())
 		}
 	}
@@ -122,7 +130,10 @@ func (r *RejectService) RejectSpec(ctx context.Context, spec *db.Spec) error {
 }
 
 // findStatusCell locates the position of a status cell with "Drafting" or "Braindump" in a Google Doc
-func (r *RejectService) findStatusCell(ctx context.Context, docID string) (*CellCoordinates, error) {
+func (r *RejectService) findStatusCell(
+	ctx context.Context,
+	docID string,
+) (*CellCoordinates, error) {
 	// Get the first table from the document using the same approach as parser.go
 	table, err := r.GoogleClient.DocumentFirstTable(ctx, docID)
 	if err != nil || len(table) == 0 {
