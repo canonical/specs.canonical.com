@@ -62,7 +62,8 @@ func main() {
 		googleDrive,
 		dbConn,
 		specs.RejectConfig{
-			DryRun: dryRun,
+			DryRun:        dryRun,
+			MaxGoroutines: 15,
 		},
 	)
 
