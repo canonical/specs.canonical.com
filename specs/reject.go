@@ -66,12 +66,12 @@ func (r *RejectService) worker(ctx context.Context, id int, specs <-chan *db.Spe
 }
 
 // findStaleSpecs identifies specifications that have "Drafting" or "Braindump" status
-// and have not been updated in the last 30 days
+// and have not been updated in the last 6 months
 func (r *RejectService) findStaleSpecs() ([]*db.Spec, error) {
 	var specs []*db.Spec
 	err := r.DB.
 		Where("status IN ?", []string{"Drafting", "Braindump"}).
-		Where("google_doc_updated_at < ?", time.Now().Add(-30*24*time.Hour)).
+		Where("google_doc_updated_at < ?", time.Now().AddDate(0, -6, 0)).
 		Find(&specs).Error
 
 	if err != nil {
