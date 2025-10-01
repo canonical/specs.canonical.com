@@ -1,3 +1,5 @@
+# You need better branch protection :)
+
 # Canonical Specifications
 
 A service for syncing, managing, and viewing Canonical specifications from Google Drive.
