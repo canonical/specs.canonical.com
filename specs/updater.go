@@ -95,10 +95,12 @@ func (r *RejectService) addRejectionNotice(
 
 	// Find the changelog table (table after "Spec History and Changelog" heading)
 	var changelogTable *docs.Table
+	var changelogTableElementIndex int
 	var foundChangelogHeading bool
-	for _, element := range doc.Body.Content {
+	for i, element := range doc.Body.Content {
 		if element.Table != nil && foundChangelogHeading {
 			changelogTable = element.Table
+			changelogTableElementIndex = i
 			break
 		}
 		if element.Paragraph == nil {
@@ -150,11 +152,12 @@ func (r *RejectService) addRejectionNotice(
 	doc, err = r.GoogleClient.DocsService.Documents.Get(docID).Context(ctx).Do()
 	if err != nil {
 		return fmt.Errorf("failed to fetch updated document: %w", err)
-	} else if len(doc.Body.Content)-1 < int(tableIndex) || doc.Body.Content[tableIndex].Table == nil {
+	}
+	if len(doc.Body.Content) < int(changelogTableElementIndex) || doc.Body.Content[changelogTableElementIndex].Table == nil {
 		return fmt.Errorf("failed to locate updated changelog table at expected position")
 	}
 
-	changelogTable = doc.Body.Content[tableIndex].Table
+	changelogTable = doc.Body.Content[changelogTableElementIndex].Table
 	headerColumns := map[string]int{
 		"author":  -1,
 		"status":  -1,
@@ -163,8 +166,11 @@ func (r *RejectService) addRejectionNotice(
 	}
 	for i, headerCell := range changelogTable.TableRows[0].TableCells {
 		header := normalizeChangelogHeader(headerCell)
-		if val, ok := headerColumns[header]; ok && val == -1 {
-			headerColumns[header] = i // update the map on 1st occurrence
+		for key := range headerColumns {
+			if headerColumns[key] == -1 && strings.Contains(header, key) {
+				headerColumns[key] = i // update the map on 1st occurrence
+				break
+			}
 		}
 	}
 
@@ -226,6 +232,7 @@ func (r *RejectService) addRejectionNotice(
 		Requests: insertTextRequests,
 	}).Context(ctx).Do()
 	if err != nil {
+		r.Logger.Error("failed to add rejection notice to changelog", "error", err.Error())
 		return fmt.Errorf("failed to insert text into new changelog row: %w", err)
 	}
 
