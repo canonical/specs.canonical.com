@@ -50,3 +50,7 @@ config:
       type: string
       default: 15m
       description: "The interval at which the sync job runs."
+    REJECT_INTERVAL:
+      type: string
+      default: 24h
+      description: "The interval at which the rejection job runs."
