@@ -44,7 +44,7 @@ tasks:
     cmds:
       - go run cmd/sync/main.go
 
-  reject:
+  run_reject:
     description: "Run the rejection worker"
     deps: ["tools", "build"]
     cmds:

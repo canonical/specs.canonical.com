@@ -94,7 +94,8 @@ func (r *RejectService) RejectAllStaleSpecs(ctx context.Context) error {
 	specs, err := r.findStaleSpecs()
 	if err != nil {
 		return fmt.Errorf("failed to find stale specs: %w", err)
-	} else if len(specs) == 0 {
+	}
+	if len(specs) == 0 {
 		r.Logger.Info("no stale specs to reject")
 		return nil
 	}
@@ -142,7 +143,6 @@ func (r *RejectService) RejectSpec(
 	cleanupID string,
 ) error {
 	logger := r.Logger.With("spec_id", spec.ID, "doc_id", spec.GoogleDocID)
-	rejectedStatus := "Rejected"
 
 	if r.Config.DryRun {
 		logger.Info("would reject spec (dry run)")
@@ -153,17 +153,18 @@ func (r *RejectService) RejectSpec(
 	coords, err := r.findStatusCell(ctx, spec.GoogleDocID)
 	if err != nil {
 		return fmt.Errorf("failed to find status cell: %w", err)
-	} else if coords == nil {
+	}
+	if coords == nil {
 		return fmt.Errorf("document is not a draft/braindump")
 	}
 
 	// Update the Google Doc
-	if err := r.updateDocumentStatus(ctx, spec.GoogleDocID, coords, rejectedStatus); err != nil {
+	if err := r.updateDocumentStatus(ctx, spec.GoogleDocID, coords, "Rejected"); err != nil {
 		return fmt.Errorf("failed to update document: %w", err)
 	}
 
 	updateData := map[string]any{
-		"status":    rejectedStatus,
+		"status":    "Rejected",
 		"synced_at": time.Now(),
 	}
 	if err := r.DB.Model(spec).Where("id = ?", spec.ID).Updates(updateData).Error; err != nil {

@@ -17,7 +17,6 @@ import (
 )
 
 func main() {
-
 	var dryRun bool
 	flag.BoolVar(&dryRun, "dry-run", false, "perform a dry run without making actual changes")
 	flag.Parse()
@@ -54,7 +53,7 @@ func main() {
 	}
 
 	// Signal handling
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
 
 	rejectService := specs.NewRejectService(
@@ -67,28 +66,14 @@ func main() {
 		},
 	)
 
-	go func() {
-		sigChan := make(chan os.Signal, 1)
-		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-		sig := <-sigChan
-		logger.Info("received signal, shutting down", "signal", sig)
-		cancel()
-	}()
 	// Set up ticker for periodic runs
 	ticker := time.NewTicker(c.GetRejectInterval())
 	defer ticker.Stop()
-
-	firstTick := make(chan time.Time, 1)
-	firstTick <- time.Now()
 
 	logger.Info("starting rejection job",
 		"interval", c.GetRejectInterval(),
 		"dry_run", dryRun,
 		"pid", os.Getpid())
-
-	if dryRun {
-		logger.Info("DRY RUN MODE: No actual changes will be made")
-	}
 
 	// Run initial rejection
 	if err := rejectService.RejectAllStaleSpecs(ctx); err != nil {
@@ -103,11 +88,11 @@ func main() {
 	for {
 		select {
 		case <-ctx.Done():
-			logger.Info("sync job stopped")
+			logger.Info("rejection job stopped")
 			return
 		case <-ticker.C:
 			if err := rejectService.RejectAllStaleSpecs(ctx); err != nil {
-				logger.Error("sync failed", "error", err)
+				logger.Error("spec rejection failed", "error", err)
 			}
 		}
 	}
