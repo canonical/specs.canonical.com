@@ -219,3 +219,13 @@ func (g *Google) DocumentFirstTable(ctx context.Context, fileID string) ([][]str
 
 	return result, nil
 }
+
+// AddDocComment adds a comment to the given Google Doc.
+func (g *Google) AddDocComment(ctx context.Context, fileID, content string) error {
+	_, err := g.DriveService.Comments.
+		Create(fileID, &drive.Comment{Content: content}).
+		Context(ctx).
+		Fields("id").
+		Do()
+	return err
+}

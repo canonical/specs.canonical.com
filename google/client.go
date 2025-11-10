@@ -33,7 +33,7 @@ func NewGoogleDrive(config Config) (*Google, error) {
 		Email:        config.ClientEmail,
 		PrivateKey:   []byte(config.PrivateKey),
 		PrivateKeyID: config.PrivateKeyID,
-		Scopes:       []string{drive.DriveReadonlyScope},
+		Scopes:       []string{drive.DriveScope},
 		TokenURL:     google.JWTTokenURL,
 	}
 
