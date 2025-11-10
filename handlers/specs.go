@@ -20,6 +20,7 @@ type ListSpecsRequest struct {
 	Type        []string `query:"type"`
 	Status      []string `query:"status"`
 	Author      string   `query:"author"`
+	Reviewer    string   `query:"reviewer"`
 	SearchQuery string   `query:"searchQuery"`
 }
 
@@ -100,6 +101,11 @@ func (s *Server) ListSpecs(c echo.Context) error {
 
 	if req.Author != "" {
 		query = query.Where("ARRAY_TO_STRING(authors, ' ') ILIKE ?", "%"+strings.TrimSpace(req.Author)+"%")
+	}
+
+	if req.Reviewer != "" {
+		query = query.Joins("JOIN reviewers rev ON rev.spec_id = specs.id").
+			Where("rev.name ILIKE ?", "%"+strings.TrimSpace(req.Reviewer)+"%")
 	}
 
 	if req.OrderBy == "created_at" {
@@ -196,6 +202,18 @@ func (s *Server) SpecAuthors(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to fetch authors: "+err.Error())
 	}
 	return c.JSON(http.StatusOK, uniqueAuthors)
+}
+
+func (s *Server) SpecReviewers(c echo.Context) error {
+	var uniqueReviewers []string
+	if err := s.DB.Model(&db.Reviewer{}).
+		Select("DISTINCT Name as reviewer").
+		Order("reviewer").
+		Pluck("reviewer", &uniqueReviewers).
+		Error; err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to fetch reviewers: "+err.Error())
+	}
+	return c.JSON(http.StatusOK, uniqueReviewers)
 }
 
 func (s *Server) SpecTeams(c echo.Context) error {
