@@ -17,8 +17,12 @@ import (
 )
 
 func main() {
-	var dryRun bool
+	var (
+		dryRun      bool
+		googleDocID string
+	)
 	flag.BoolVar(&dryRun, "dry-run", false, "perform a dry run without making actual changes")
+	flag.StringVar(&googleDocID, "google-doc-id", "", "reject a single doc (optional)")
 	flag.Parse()
 
 	c := config.MustLoadConfig()
@@ -64,6 +68,17 @@ func main() {
 			DryRun: dryRun,
 		},
 	)
+
+	// Handle single file testing
+	if googleDocID != "" {
+		logger.Info("testing with single file", "file_id", googleDocID)
+		if err := rejectService.RejectSpecByGoogleDocID(context.Background(), googleDocID); err != nil {
+			logger.Error("failed to reject spec", "error", err)
+			os.Exit(1)
+		}
+		logger.Info("single file test completed")
+		return
+	}
 
 	// Set up ticker for periodic runs
 	ticker := time.NewTicker(c.GetRejectInterval())

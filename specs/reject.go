@@ -193,3 +193,21 @@ func findStatusInRowFormat(table [][]string) *CellCoordinates {
 
 	return nil
 }
+
+// RejectSpecByGoogleDocID finds a spec by its Google Doc ID and rejects it
+// This is useful for testing with a single file
+func (r *RejectService) RejectSpecByGoogleDocID(ctx context.Context, googleDocID string) error {
+	logger := r.Logger.With("doc_id", googleDocID)
+
+	// Find the spec in the database
+	var spec *db.Spec
+	if err := r.DB.Where("google_doc_id = ?", googleDocID).First(&spec).Error; err != nil {
+		return fmt.Errorf("failed to find spec with google_doc_id %s: %w", googleDocID, err)
+	}
+
+	logger = logger.With("spec_id", spec.ID)
+	logger.Info("found spec, attempting rejection")
+
+	cleanupID := uuid.New().String()
+	return r.RejectSpec(ctx, spec, cleanupID)
+}

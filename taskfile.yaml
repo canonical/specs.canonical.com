@@ -49,7 +49,9 @@ tasks:
     description: "Run the rejection worker"
     deps: ["tools", "build"]
     cmds:
-      - go run cmd/reject/main.go --dry-run
+      - go run cmd/reject/main.go --dry-run --google-doc-id={{.DOC_ID}}
+    vars:
+      DOC_ID: '{{default "" .DOC_ID}}'
 
   dev:
     description: "Run the application in watch mode"
