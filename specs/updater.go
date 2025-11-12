@@ -162,7 +162,7 @@ func (r *RejectService) addRejectionNotice(
 	if err != nil {
 		return fmt.Errorf("failed to fetch updated document: %w", err)
 	}
-	if len(doc.Body.Content) <= int(changelogTableElementIndex) || doc.Body.Content[changelogTableElementIndex].Table == nil {
+	if len(doc.Body.Content) <= changelogTableElementIndex || doc.Body.Content[changelogTableElementIndex].Table == nil {
 		return fmt.Errorf("failed to locate updated changelog table at expected position")
 	}
 

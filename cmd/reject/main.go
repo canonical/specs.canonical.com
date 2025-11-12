@@ -72,7 +72,7 @@ func main() {
 	// Handle single file testing
 	if googleDocID != "" {
 		logger.Info("testing with single file", "file_id", googleDocID)
-		if err := rejectService.RejectSpecByGoogleDocID(context.Background(), googleDocID); err != nil {
+		if err := rejectService.RejectSpecByGoogleDocID(ctx, googleDocID); err != nil {
 			logger.Error("failed to reject spec", "error", err)
 			os.Exit(1)
 		}

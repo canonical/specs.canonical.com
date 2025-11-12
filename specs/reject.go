@@ -43,7 +43,7 @@ func NewRejectService(logger *slog.Logger, googleClient *google.Google, db *gorm
 func (r *RejectService) findStaleSpecs() ([]*db.Spec, error) {
 	var specs []*db.Spec
 	err := r.DB.
-		Where("status IN ?", []string{"Drafting", "Braindump"}).
+		Where("LOWER(status) IN ?", []string{"drafting", "braindump"}).
 		Where("google_doc_updated_at < ?", time.Now().AddDate(0, -6, 0)).
 		Find(&specs).Error
 
@@ -137,9 +137,10 @@ func (r *RejectService) RejectSpec(
 	logger.Info("successfully rejected spec")
 
 	// Add rejection notice to the document
+	// Rejection notice is not critical, so log error but do not fail the rejection
 	if err = r.addRejectionNotice(ctx, spec.GoogleDocID, cleanupID); err != nil {
 		if err = r.addFallbackRejectionNotice(ctx, spec.GoogleDocID, cleanupID); err != nil {
-			logger.Error("failed to add fallback rejection notice", "error", err.Error())
+			logger.Error("failed to add rejection notice", "error", err.Error())
 		}
 	}
 
