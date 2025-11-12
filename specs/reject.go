@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log/slog"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/canonical/specs-v2.canonical.com/db"
@@ -26,8 +25,7 @@ type RejectService struct {
 }
 
 type RejectConfig struct {
-	DryRun        bool // If true, will log what would be done without making changes
-	MaxGoroutines int
+	DryRun bool // If true, will log what would be done without making changes
 }
 
 // NewRejectService creates a new specification rejection service
@@ -37,31 +35,6 @@ func NewRejectService(logger *slog.Logger, googleClient *google.Google, db *gorm
 		GoogleClient: googleClient,
 		DB:           db,
 		Config:       config,
-	}
-}
-
-// worker processes specs from a channel in a goroutine
-func (r *RejectService) worker(ctx context.Context, id int, specs <-chan *db.Spec, cleanupID string) {
-	logger := r.Logger.With("worker_id", id)
-
-	for {
-		select {
-		case <-ctx.Done():
-			logger.Info("worker stopped due to cancellation")
-			return
-		case spec, ok := <-specs:
-			if !ok {
-				return
-			}
-			logger := logger.With("spec_id", spec.ID, "doc_id", spec.GoogleDocID)
-			err := r.RejectSpec(ctx, spec, cleanupID)
-			if err != nil {
-				logger.Error("failed to reject spec", "error", err.Error())
-				r.FailedCount++
-			} else {
-				r.RejectedCount++
-			}
-		}
 	}
 }
 
@@ -85,7 +58,6 @@ func (r *RejectService) findStaleSpecs() ([]*db.Spec, error) {
 func (r *RejectService) RejectAllStaleSpecs(ctx context.Context) error {
 	r.Logger.Info("starting stale spec rejection job",
 		"dry_run", r.Config.DryRun,
-		"max_goroutines", r.Config.MaxGoroutines,
 	)
 	r.FailedCount = 0
 	r.RejectedCount = 0
@@ -100,33 +72,24 @@ func (r *RejectService) RejectAllStaleSpecs(ctx context.Context) error {
 		return nil
 	}
 
-	// Create channel for work distribution
-	workerItems := make(chan *db.Spec, r.Config.MaxGoroutines)
-	var wg sync.WaitGroup
-
-	// Start worker pool
-	for i := 0; i < r.Config.MaxGoroutines; i++ {
-		wg.Add(1)
-		go func(id int) {
-			defer wg.Done()
-			r.worker(ctx, id, workerItems, cleanupID)
-		}(i)
-	}
-
-	// Send specs to workers
-	go func() {
-		defer close(workerItems)
-		for _, spec := range specs {
-			select {
-			case workerItems <- spec:
-			case <-ctx.Done():
-				return
-			}
+	// Process specs sequentially
+	for _, spec := range specs {
+		select {
+		case <-ctx.Done():
+			r.Logger.Info("rejection job cancelled")
+			return ctx.Err()
+		default:
 		}
-	}()
 
-	// Wait for all workers to finish
-	wg.Wait()
+		logger := r.Logger.With("spec_id", spec.ID, "doc_id", spec.GoogleDocID)
+		err := r.RejectSpec(ctx, spec, cleanupID)
+		if err != nil {
+			logger.Error("failed to reject spec", "error", err.Error())
+			r.FailedCount++
+		} else {
+			r.RejectedCount++
+		}
+	}
 
 	r.Logger.Info("completed stale spec rejection",
 		"total", len(specs),

@@ -9,6 +9,15 @@ import (
 	"google.golang.org/api/docs/v1"
 )
 
+// CellBoundaryOffset represents the fixed boundary size between cells in Google Docs API.
+// In the Google Docs API, when calculating cell positions in a table, each cell is separated
+// by a boundary marker. This constant accounts for:
+//   - 1 byte for the cell division character (typically '\n')
+//   - 1 byte for the cell start character (typically '\v')
+//
+// This is used when advancing from one cell's position to the next cell's start index.
+const CellBoundaryOffset int64 = 2
+
 // CellCoordinates represents the position of a status cell in a Google Doc table
 type CellCoordinates struct {
 	Row int
@@ -153,7 +162,7 @@ func (r *RejectService) addRejectionNotice(
 	if err != nil {
 		return fmt.Errorf("failed to fetch updated document: %w", err)
 	}
-	if len(doc.Body.Content) < int(changelogTableElementIndex) || doc.Body.Content[changelogTableElementIndex].Table == nil {
+	if len(doc.Body.Content) <= int(changelogTableElementIndex) || doc.Body.Content[changelogTableElementIndex].Table == nil {
 		return fmt.Errorf("failed to locate updated changelog table at expected position")
 	}
 
@@ -225,7 +234,7 @@ func (r *RejectService) addRejectionNotice(
 		})
 
 		// Move to the start index of the next cell
-		cellStartIndex += int64(len(content) + 2) // +2 for cell division and start
+		cellStartIndex += int64(len(content)) + CellBoundaryOffset
 	}
 
 	_, err = r.GoogleClient.DocsService.Documents.BatchUpdate(docID, &docs.BatchUpdateDocumentRequest{
@@ -239,7 +248,7 @@ func (r *RejectService) addRejectionNotice(
 	return nil
 }
 
-// createFallbackRejectionMessage creates a fallback rejection message with red text when changelog table is not available
+// addFallbackRejectionNotice creates a fallback rejection message with red text when changelog table is not available
 func (r *RejectService) addFallbackRejectionNotice(
 	ctx context.Context,
 	docID string,
