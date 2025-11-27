@@ -67,7 +67,6 @@ func (r *RejectService) RejectAllStaleSpecs(ctx context.Context) error {
 	for _, spec := range specs {
 		select {
 		case <-ctx.Done():
-			r.Logger.Info("rejection job cancelled")
 			return ctx.Err()
 		default:
 		}
