@@ -60,14 +60,14 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
 
-	rejectService := specs.NewRejectService(
-		logger,
-		googleDrive,
-		dbConn,
-		specs.RejectConfig{
+	rejectService := &specs.RejectService{
+		Logger:       logger.With("component", "specs_reject"),
+		GoogleClient: googleDrive,
+		DB:           dbConn,
+		Config: specs.RejectConfig{
 			DryRun: dryRun,
 		},
-	)
+	}
 
 	// Handle single file testing
 	if googleDocID != "" {

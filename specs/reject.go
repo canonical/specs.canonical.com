@@ -20,22 +20,12 @@ type RejectService struct {
 	DB           *gorm.DB
 	Config       RejectConfig
 
-	FailedCount   int
-	RejectedCount int
+	failedCount   int
+	rejectedCount int
 }
 
 type RejectConfig struct {
 	DryRun bool // If true, will log what would be done without making changes
-}
-
-// NewRejectService creates a new specification rejection service
-func NewRejectService(logger *slog.Logger, googleClient *google.Google, db *gorm.DB, config RejectConfig) *RejectService {
-	return &RejectService{
-		Logger:       logger.With("component", "specs_reject"),
-		GoogleClient: googleClient,
-		DB:           db,
-		Config:       config,
-	}
 }
 
 // findStaleSpecs identifies specifications that have "Drafting" or "Braindump" status
@@ -59,8 +49,8 @@ func (r *RejectService) RejectAllStaleSpecs(ctx context.Context) error {
 	r.Logger.Info("starting stale spec rejection job",
 		"dry_run", r.Config.DryRun,
 	)
-	r.FailedCount = 0
-	r.RejectedCount = 0
+	r.failedCount = 0
+	r.rejectedCount = 0
 	cleanupID := uuid.New().String()
 
 	specs, err := r.findStaleSpecs()
@@ -85,16 +75,16 @@ func (r *RejectService) RejectAllStaleSpecs(ctx context.Context) error {
 		err := r.RejectSpec(ctx, spec, cleanupID)
 		if err != nil {
 			logger.Error("failed to reject spec", "error", err.Error())
-			r.FailedCount++
+			r.failedCount++
 		} else {
-			r.RejectedCount++
+			r.rejectedCount++
 		}
 	}
 
 	r.Logger.Info("completed stale spec rejection",
 		"total", len(specs),
-		"rejected", r.RejectedCount,
-		"failed", r.FailedCount)
+		"rejected", r.rejectedCount,
+		"failed", r.failedCount)
 
 	return nil
 }
