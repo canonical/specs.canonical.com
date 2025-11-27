@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 	"unicode"
+
+	"google.golang.org/api/drive/v3"
 )
 
 type Config struct {
@@ -26,8 +28,22 @@ type Config struct {
 	GoogleOAuthClientID     string `env:"required"`
 	GoogleOAuthClientSecret string `env:"required"`
 
-	SyncInterval   string `env:"default:1h"`
-	RejectInterval string `env:"default:24h"`
+	GoogleClientID    string `env:"required"`
+	GoogleClientEmail string `env:"required"`
+	GoogleProjectID   string `env:"required"`
+
+	SyncInterval          string `env:"default:1h"`
+	SyncGoogleDriveScopes string `env:"default:readonly"`
+
+	RejectInterval          string `env:"default:24h"`
+	RejectGoogleDriveScopes string `env:"default:full"`
+}
+
+// scopeAliases maps short names to full Google Drive scope URLs
+var scopeAliases = map[string]string{
+	"readonly": drive.DriveReadonlyScope,
+	"full":     drive.DriveScope,
+	"file":     drive.DriveFileScope,
 }
 
 func (c *Config) IsProduction() bool {
@@ -56,6 +72,28 @@ func (c *Config) GetRejectInterval() time.Duration {
 		panic(err)
 	}
 	return d
+}
+
+func (c *Config) GetSyncGoogleDriveScopes() []string {
+	return parseScopes(c.SyncGoogleDriveScopes)
+}
+
+func (c *Config) GetRejectGoogleDriveScopes() []string {
+	return parseScopes(c.RejectGoogleDriveScopes)
+}
+
+// parseScopes converts comma-separated scope names to full URLs.
+// Supports aliases (readonly, full, file) and full URLs.
+func parseScopes(scopesStr string) []string {
+	result := make([]string, 0)
+	for _, s := range strings.Split(scopesStr, ",") {
+		scope, ok := scopeAliases[strings.TrimSpace(s)]
+		if ok {
+			result = append(result, scope)
+		}
+	}
+
+	return result
 }
 
 func MustLoadConfig() *Config {

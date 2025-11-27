@@ -54,3 +54,16 @@ config:
       type: string
       default: 24h
       description: "The interval at which the rejection job runs."
+
+    GOOGLE_CLIENT_ID:
+      type: string
+      default: "112404606310881291739"
+      description: "The client_id for the Google service account."
+    GOOGLE_CLIENT_EMAIL:
+      type: string
+      default: "specs-reader@roadmap-270011.iam.gserviceaccount.com"
+      description: "The client_email for the Google service account."
+    GOOGLE_PROJECT_ID:
+      type: string
+      default: "roadmap-270011"
+      description: "The project_id for the Google service account."

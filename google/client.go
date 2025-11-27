@@ -19,13 +19,12 @@ type Google struct {
 }
 
 type Config struct {
-	ClientID          string
-	ClientEmail       string
-	ClientX509CertURL string
-	PrivateKey        string
-	PrivateKeyID      string
-	ProjectID         string
-	Scopes            []string
+	ClientID     string
+	ClientEmail  string
+	PrivateKey   string
+	PrivateKeyID string
+	ProjectID    string
+	Scopes       []string
 }
 
 // NewGoogleDrive creates a new GoogleDrive client
