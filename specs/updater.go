@@ -9,16 +9,20 @@ import (
 	"google.golang.org/api/docs/v1"
 )
 
-// CellBoundaryOffset represents the fixed boundary size between cells in Google Docs API.
-// In the Google Docs API, when calculating cell positions in a table, each cell is separated
-// by a boundary marker. This constant accounts for:
+// CellBoundaryOffset represents the fixed boundary size between cells
+// in Google Docs API.
+//
+// In the Google Docs API, when calculating cell positions in a table,
+// each cell is separated by a boundary marker. This constant accounts for:
 //   - 1 byte for the cell division character (typically '\n')
 //   - 1 byte for the cell start character (typically '\v')
 //
-// This is used when advancing from one cell's position to the next cell's start index.
+// This is used when advancing from one cell's position to the next
+// cell's start index.
 const CellBoundaryOffset int64 = 2
 
-// CellCoordinates represents the position of a status cell in a Google Doc table
+// CellCoordinates represents the position of a status cell in a
+// Google Doc table.
 type CellCoordinates struct {
 	Row int
 	Col int
@@ -33,7 +37,7 @@ func (r *RejectService) updateDocumentStatus(
 ) error {
 	doc, err := r.GoogleClient.DocsService.Documents.Get(docID).Context(ctx).Do()
 	if err != nil {
-		return fmt.Errorf("failed to fetch document: %w", err)
+		return fmt.Errorf("failed to fetch document: %v", err)
 	}
 
 	var table *docs.Table
@@ -85,7 +89,7 @@ func (r *RejectService) updateDocumentStatus(
 		},
 	}).Context(ctx).Do()
 	if err != nil {
-		return fmt.Errorf("failed to update status cell: %w", err)
+		return fmt.Errorf("failed to update status cell: %v", err)
 	}
 
 	return nil
@@ -99,7 +103,7 @@ func (r *RejectService) addRejectionNotice(
 ) error {
 	doc, err := r.GoogleClient.DocsService.Documents.Get(docID).Context(ctx).Do()
 	if err != nil {
-		return fmt.Errorf("failed to fetch updated document: %w", err)
+		return fmt.Errorf("failed to fetch updated document: %v", err)
 	}
 
 	// Find the changelog table (table after "Spec History and Changelog" heading)
@@ -153,14 +157,14 @@ func (r *RejectService) addRejectionNotice(
 		Requests: rejectionRequests,
 	}).Context(ctx).Do()
 	if err != nil {
-		return fmt.Errorf("failed to create new changelog row: %w", err)
+		return fmt.Errorf("failed to create new changelog row: %v", err)
 	}
 
 	// Refresh the document to get updated table
 	// Some tables have defaults for new rows which we need to overwrite
 	doc, err = r.GoogleClient.DocsService.Documents.Get(docID).Context(ctx).Do()
 	if err != nil {
-		return fmt.Errorf("failed to fetch updated document: %w", err)
+		return fmt.Errorf("failed to fetch updated document: %v", err)
 	}
 	if len(doc.Body.Content) <= changelogTableElementIndex || doc.Body.Content[changelogTableElementIndex].Table == nil {
 		return fmt.Errorf("failed to locate updated changelog table at expected position")
@@ -242,13 +246,14 @@ func (r *RejectService) addRejectionNotice(
 	}).Context(ctx).Do()
 	if err != nil {
 		r.Logger.Error("failed to add rejection notice to changelog", "error", err.Error())
-		return fmt.Errorf("failed to insert text into new changelog row: %w", err)
+		return fmt.Errorf("failed to insert text into new changelog row: %v", err)
 	}
 
 	return nil
 }
 
-// addFallbackRejectionNotice creates a fallback rejection message with red text when changelog table is not available
+// addFallbackRejectionNotice creates a fallback rejection message with
+// red text when changelog table is not available.
 func (r *RejectService) addFallbackRejectionNotice(
 	ctx context.Context,
 	docID string,
@@ -297,7 +302,8 @@ func (r *RejectService) addFallbackRejectionNotice(
 	return err
 }
 
-// normalizeChangelogHeader extracts and normalizes text from a table cell header
+// normalizeChangelogHeader extracts and normalizes text from a table
+// cell header.
 func normalizeChangelogHeader(cell *docs.TableCell) string {
 	if cell == nil || len(cell.Content) == 0 || cell.Content[0].Paragraph == nil {
 		return ""

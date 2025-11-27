@@ -28,8 +28,9 @@ type RejectConfig struct {
 	DryRun bool // If true, will log what would be done without making changes
 }
 
-// findStaleSpecs identifies specifications that have "Drafting" or "Braindump" status
-// and have not been updated in the last 6 months
+// findStaleSpecs identifies specifications that:
+//   - Have "Drafting" or "Braindump" status
+//   - Have not been updated in the last 6 months.
 func (r *RejectService) findStaleSpecs() ([]*db.Spec, error) {
 	var specs []*db.Spec
 	err := r.DB.
@@ -38,7 +39,7 @@ func (r *RejectService) findStaleSpecs() ([]*db.Spec, error) {
 		Find(&specs).Error
 
 	if err != nil {
-		return nil, fmt.Errorf("failed to query stale specs: %w", err)
+		return nil, fmt.Errorf("failed to query stale specs: %v", err)
 	}
 
 	return specs, nil
@@ -55,7 +56,7 @@ func (r *RejectService) RejectAllStaleSpecs(ctx context.Context) error {
 
 	specs, err := r.findStaleSpecs()
 	if err != nil {
-		return fmt.Errorf("failed to find stale specs: %w", err)
+		return fmt.Errorf("failed to find stale specs: %v", err)
 	}
 	if len(specs) == 0 {
 		r.Logger.Info("no stale specs to reject")
@@ -105,7 +106,7 @@ func (r *RejectService) RejectSpec(
 	// Find the status cell coordinates
 	coords, err := r.findStatusCell(ctx, spec.GoogleDocID)
 	if err != nil {
-		return fmt.Errorf("failed to find status cell: %w", err)
+		return fmt.Errorf("failed to find status cell: %v", err)
 	}
 	if coords == nil {
 		return fmt.Errorf("document is not a draft/braindump")
@@ -113,7 +114,7 @@ func (r *RejectService) RejectSpec(
 
 	// Update the Google Doc
 	if err := r.updateDocumentStatus(ctx, spec.GoogleDocID, coords, "Rejected"); err != nil {
-		return fmt.Errorf("failed to update document: %w", err)
+		return fmt.Errorf("failed to update document: %v", err)
 	}
 
 	updateData := map[string]any{
@@ -121,13 +122,13 @@ func (r *RejectService) RejectSpec(
 		"synced_at": time.Now(),
 	}
 	if err := r.DB.Model(spec).Where("id = ?", spec.ID).Updates(updateData).Error; err != nil {
-		return fmt.Errorf("failed to update spec status in database: %w", err)
+		return fmt.Errorf("failed to update spec status in database: %v", err)
 	}
 
 	logger.Info("successfully rejected spec")
 
 	// Add rejection notice to the document
-	// Rejection notice is not critical, so log error but do not fail the rejection
+	// Rejection notice is not critical, so log error but do not fail
 	if err = r.addRejectionNotice(ctx, spec.GoogleDocID, cleanupID); err != nil {
 		if err = r.addFallbackRejectionNotice(ctx, spec.GoogleDocID, cleanupID); err != nil {
 			logger.Error("failed to add rejection notice", "error", err.Error())
@@ -137,15 +138,14 @@ func (r *RejectService) RejectSpec(
 	return nil
 }
 
-// findStatusCell locates the position of a status cell with "Drafting" or "Braindump" in a Google Doc
+// findStatusCell locates the position of a spec status cell in a Google Doc
 func (r *RejectService) findStatusCell(
 	ctx context.Context,
 	docID string,
 ) (*CellCoordinates, error) {
-	// Get the first table from the document using the same approach as parser.go
 	table, err := r.GoogleClient.DocumentFirstTable(ctx, docID)
 	if err != nil || len(table) == 0 {
-		return nil, fmt.Errorf("metadata not found or malformed: %w", err)
+		return nil, fmt.Errorf("metadata not found or malformed: %v", err)
 	}
 
 	// Find the status cell coordinates using table format detection
@@ -193,7 +193,7 @@ func (r *RejectService) RejectSpecByGoogleDocID(ctx context.Context, googleDocID
 	// Find the spec in the database
 	var spec *db.Spec
 	if err := r.DB.Where("google_doc_id = ?", googleDocID).First(&spec).Error; err != nil {
-		return fmt.Errorf("failed to find spec with google_doc_id %s: %w", googleDocID, err)
+		return fmt.Errorf("failed to find spec with google_doc_id %s: %v", googleDocID, err)
 	}
 
 	logger = logger.With("spec_id", spec.ID)
