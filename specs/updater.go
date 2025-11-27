@@ -9,7 +9,7 @@ import (
 	"google.golang.org/api/docs/v1"
 )
 
-// CellBoundaryOffset represents the fixed boundary size between cells
+// cellBoundaryOffset represents the fixed boundary size between cells
 // in Google Docs API.
 //
 // In the Google Docs API, when calculating cell positions in a table,
@@ -19,11 +19,11 @@ import (
 //
 // This is used when advancing from one cell's position to the next
 // cell's start index.
-const CellBoundaryOffset int64 = 2
+const cellBoundaryOffset int64 = 2
 
-// CellCoordinates represents the position of a status cell in a
+// cellCoordinates represents the position of a status cell in a
 // Google Doc table.
-type CellCoordinates struct {
+type cellCoordinates struct {
 	Row int
 	Col int
 }
@@ -32,7 +32,7 @@ type CellCoordinates struct {
 func (r *RejectService) updateDocumentStatus(
 	ctx context.Context,
 	docID string,
-	coords *CellCoordinates,
+	coords *cellCoordinates,
 	newStatus string,
 ) error {
 	doc, err := r.GoogleClient.DocsService.Documents.Get(docID).Context(ctx).Do()
@@ -238,7 +238,7 @@ func (r *RejectService) addRejectionNotice(
 		})
 
 		// Move to the start index of the next cell
-		cellStartIndex += int64(len(content)) + CellBoundaryOffset
+		cellStartIndex += int64(len(content)) + cellBoundaryOffset
 	}
 
 	_, err = r.GoogleClient.DocsService.Documents.BatchUpdate(docID, &docs.BatchUpdateDocumentRequest{

@@ -142,14 +142,14 @@ func (r *RejectService) RejectSpec(
 func (r *RejectService) findStatusCell(
 	ctx context.Context,
 	docID string,
-) (*CellCoordinates, error) {
+) (*cellCoordinates, error) {
 	table, err := r.GoogleClient.DocumentFirstTable(ctx, docID)
 	if err != nil || len(table) == 0 {
 		return nil, fmt.Errorf("metadata not found or malformed: %v", err)
 	}
 
 	// Find the status cell coordinates using table format detection
-	var coords *CellCoordinates
+	var coords *cellCoordinates
 	if isColumnFormat(table) {
 		coords = findStatusInColumnFormat(table)
 	} else {
@@ -160,26 +160,26 @@ func (r *RejectService) findStatusCell(
 }
 
 // findStatusInColumnFormat searches for status in column-based table format
-func findStatusInColumnFormat(table [][]string) *CellCoordinates {
+func findStatusInColumnFormat(table [][]string) *cellCoordinates {
 	if len(table) < 4 || len(table[3]) < 3 {
 		return nil
 	}
 
 	if status := strings.ToLower(strings.TrimSpace(table[3][2])); status == "drafting" || status == "braindump" {
-		return &CellCoordinates{Row: 3, Col: 2}
+		return &cellCoordinates{Row: 3, Col: 2}
 	}
 
 	return nil
 }
 
 // findStatusInRowFormat searches for status in row-based table format
-func findStatusInRowFormat(table [][]string) *CellCoordinates {
+func findStatusInRowFormat(table [][]string) *cellCoordinates {
 	if len(table) < 3 || len(table[2]) < 2 {
 		return nil
 	}
 
 	if status := strings.ToLower(strings.TrimSpace(table[2][1])); status == "drafting" || status == "braindump" {
-		return &CellCoordinates{Row: 2, Col: 1}
+		return &cellCoordinates{Row: 2, Col: 1}
 	}
 
 	return nil
