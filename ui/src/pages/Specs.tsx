@@ -120,6 +120,10 @@ function Specs() {
         }
         itemsRight={[
           {
+            url: "https://superset.canonical.com/superset/dashboard/2786/",
+            label: "Analytics Dashboard",
+          },
+          {
             url: "https://docs.google.com/document/d/1lStJjBGW7lyojgBhxGLUNnliUocYWjAZ1VEbbVduX54/edit#heading=h.31hys4te5m58",
             label: "How to add a new spec",
           },
