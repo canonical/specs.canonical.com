@@ -69,24 +69,16 @@ func (r *RejectService) updateDocumentStatus(
 	cellStartIndex := contentElements[0].StartIndex
 	cellEndIndex := contentElements[len(contentElements)-1].EndIndex - 1
 	_, err = r.GoogleClient.DocsService.Documents.BatchUpdate(docID, &docs.BatchUpdateDocumentRequest{
-		Requests: []*docs.Request{
-			{
-				DeleteContentRange: &docs.DeleteContentRangeRequest{
-					Range: &docs.Range{
-						StartIndex: cellStartIndex,
-						EndIndex:   cellEndIndex,
-					},
-				},
+		Requests: []*docs.Request{{
+			DeleteContentRange: &docs.DeleteContentRangeRequest{
+				Range: &docs.Range{StartIndex: cellStartIndex, EndIndex: cellEndIndex},
 			},
-			{
-				InsertText: &docs.InsertTextRequest{
-					Location: &docs.Location{
-						Index: cellStartIndex,
-					},
-					Text: newStatus,
-				},
+		}, {
+			InsertText: &docs.InsertTextRequest{
+				Location: &docs.Location{Index: cellStartIndex},
+				Text:     newStatus,
 			},
-		},
+		}},
 	}).Context(ctx).Do()
 	if err != nil {
 		return fmt.Errorf("failed to update status cell: %v", err)
@@ -144,11 +136,9 @@ func (r *RejectService) addRejectionNotice(
 	rejectionRequests := []*docs.Request{{
 		InsertTableRow: &docs.InsertTableRowRequest{
 			TableCellLocation: &docs.TableCellLocation{
-				TableStartLocation: &docs.Location{
-					Index: tableIndex, // Use the table's start index
-				},
-				RowIndex:    int64(len(changelogTable.TableRows) - 1), // Last row index
-				ColumnIndex: int64(0),                                 // Reference the first column
+				TableStartLocation: &docs.Location{Index: tableIndex},        // Use the table's start index
+				RowIndex:           int64(len(changelogTable.TableRows) - 1), // Last row index
+				ColumnIndex:        int64(0),                                 // Reference the first column
 			},
 			InsertBelow: true,
 		},
@@ -219,10 +209,7 @@ func (r *RejectService) addRejectionNotice(
 		if contentSize > 0 {
 			insertTextRequests = append(insertTextRequests, &docs.Request{
 				DeleteContentRange: &docs.DeleteContentRangeRequest{
-					Range: &docs.Range{
-						StartIndex: cellStartIndex,
-						EndIndex:   cellStartIndex + contentSize,
-					},
+					Range: &docs.Range{StartIndex: cellStartIndex, EndIndex: cellStartIndex + contentSize},
 				},
 			})
 		}
@@ -230,10 +217,8 @@ func (r *RejectService) addRejectionNotice(
 		// Insert new content
 		insertTextRequests = append(insertTextRequests, &docs.Request{
 			InsertText: &docs.InsertTextRequest{
-				Text: content,
-				Location: &docs.Location{
-					Index: cellStartIndex,
-				},
+				Text:     content,
+				Location: &docs.Location{Index: cellStartIndex},
 			},
 		})
 
@@ -265,35 +250,28 @@ func (r *RejectService) addFallbackRejectionNotice(
 		cleanupID,
 	)
 
-	rejectionRequests := []*docs.Request{
-		{
-			InsertText: &docs.InsertTextRequest{
-				Location: &docs.Location{Index: 1},
-				Text:     rejectionMessage + "\n\n",
-			},
+	rejectionRequests := []*docs.Request{{
+		InsertText: &docs.InsertTextRequest{
+			Location: &docs.Location{Index: 1},
+			Text:     rejectionMessage + "\n\n",
 		},
-		{
-			UpdateTextStyle: &docs.UpdateTextStyleRequest{
-				Range: &docs.Range{
-					StartIndex: 1,
-					EndIndex:   int64(len(rejectionMessage)) + 1,
-				},
-				TextStyle: &docs.TextStyle{
-					ForegroundColor: &docs.OptionalColor{
-						Color: &docs.Color{
-							RgbColor: &docs.RgbColor{
-								Red:   0.8,
-								Green: 0.2,
-								Blue:  0.2,
-							},
-						},
+	}, {
+		UpdateTextStyle: &docs.UpdateTextStyleRequest{
+			Range: &docs.Range{
+				StartIndex: 1,
+				EndIndex:   int64(len(rejectionMessage)) + 1,
+			},
+			TextStyle: &docs.TextStyle{
+				ForegroundColor: &docs.OptionalColor{
+					Color: &docs.Color{
+						RgbColor: &docs.RgbColor{Red: 0.8, Green: 0.2, Blue: 0.2},
 					},
-					Bold: true,
 				},
-				Fields: "foregroundColor,bold",
+				Bold: true,
 			},
+			Fields: "foregroundColor,bold",
 		},
-	}
+	}}
 
 	_, err := r.GoogleClient.DocsService.Documents.BatchUpdate(docID, &docs.BatchUpdateDocumentRequest{
 		Requests: rejectionRequests,

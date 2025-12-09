@@ -35,11 +35,7 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
 
-	rejectService := initRejectService(cfg, logger)
-	rejectService.Config = specs.RejectConfig{
-		DryRun:          dryRun,
-		RejectThreshold: cfg.GetRejectThreshold(),
-	}
+	rejectService := initRejectService(cfg, logger, dryRun)
 
 	// Handle single file testing
 	if googleDocID != "" {
@@ -90,7 +86,7 @@ func main() {
 }
 
 // initRejectService initializes the Reject service with all its dependencies
-func initRejectService(cfg *config.Config, logger *slog.Logger) *specs.RejectService {
+func initRejectService(cfg *config.Config, logger *slog.Logger, dryRun bool) *specs.RejectService {
 	dbConn, err := db.NewDB(logger, cfg)
 	if err != nil {
 		logger.Error("failed to connect to database", "error", err.Error())
@@ -118,9 +114,15 @@ func initRejectService(cfg *config.Config, logger *slog.Logger) *specs.RejectSer
 		os.Exit(1)
 	}
 
+	serviceConfig := specs.RejectConfig{
+		DryRun:          dryRun,
+		RejectThreshold: cfg.GetRejectThreshold(),
+	}
+
 	return &specs.RejectService{
 		Logger:       logger.With("component", "specs_reject"),
 		GoogleClient: googleDrive,
 		DB:           dbConn,
+		Config:       serviceConfig,
 	}
 }
