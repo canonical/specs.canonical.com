@@ -25,8 +25,10 @@ type RejectService struct {
 }
 
 type RejectConfig struct {
-	DryRun          bool          // If true, will log what would be done without making changes
-	RejectThreshold time.Duration // How old a spec must be to be considered stale
+	// DryRun makes the rejection log actions without actually making changes
+	DryRun bool
+	// RejectThreshold defines how old a spec must be to be considered stale
+	RejectThreshold time.Duration
 }
 
 // findStaleSpecs identifies specifications that:
