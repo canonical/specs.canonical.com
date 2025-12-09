@@ -25,17 +25,18 @@ type RejectService struct {
 }
 
 type RejectConfig struct {
-	DryRun bool // If true, will log what would be done without making changes
+	DryRun          bool          // If true, will log what would be done without making changes
+	RejectThreshold time.Duration // How old a spec must be to be considered stale
 }
 
 // findStaleSpecs identifies specifications that:
 //   - Have "Drafting" or "Braindump" status
-//   - Have not been updated in the last 6 months.
+//   - Have not been updated in the configured threshold period.
 func (r *RejectService) findStaleSpecs() ([]*db.Spec, error) {
 	var specs []*db.Spec
 	err := r.DB.
 		Where("LOWER(status) IN ?", []string{"drafting", "braindump"}).
-		Where("google_doc_updated_at < ?", time.Now().AddDate(0, -6, 0)).
+		Where("google_doc_updated_at < ?", time.Now().Add(r.Config.RejectThreshold)).
 		Find(&specs).Error
 
 	if err != nil {
@@ -47,9 +48,6 @@ func (r *RejectService) findStaleSpecs() ([]*db.Spec, error) {
 
 // RejectAllStaleSpecs finds and rejects all stale specifications
 func (r *RejectService) RejectAllStaleSpecs(ctx context.Context) error {
-	r.Logger.Info("starting stale spec rejection job",
-		"dry_run", r.Config.DryRun,
-	)
 	r.failedCount = 0
 	r.rejectedCount = 0
 	cleanupID := uuid.New().String()

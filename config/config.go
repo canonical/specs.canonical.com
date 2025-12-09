@@ -28,14 +28,15 @@ type Config struct {
 	GoogleOAuthClientID     string `env:"required"`
 	GoogleOAuthClientSecret string `env:"required"`
 
-	GoogleClientID    string `env:"required"`
-	GoogleClientEmail string `env:"required"`
-	GoogleProjectID   string `env:"required"`
+	GoogleClientID    string `env:"default:112404606310881291739"`
+	GoogleClientEmail string `env:"default:specs-reader@roadmap-270011.iam.gserviceaccount.com"`
+	GoogleProjectID   string `env:"default:roadmap-270011"`
 
 	SyncInterval          string `env:"default:1h"`
 	SyncGoogleDriveScopes string `env:"default:readonly"`
 
 	RejectInterval          string `env:"default:24h"`
+	RejectThreshold         string `env:"default:4380h"` // 6 months
 	RejectGoogleDriveScopes string `env:"default:full"`
 }
 
@@ -72,6 +73,14 @@ func (c *Config) GetRejectInterval() time.Duration {
 		panic(err)
 	}
 	return d
+}
+
+func (c *Config) GetRejectThreshold() time.Duration {
+	d, err := time.ParseDuration(c.RejectThreshold)
+	if err != nil {
+		panic(err)
+	}
+	return -d
 }
 
 func (c *Config) GetSyncGoogleDriveScopes() []string {

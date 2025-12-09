@@ -37,7 +37,8 @@ func main() {
 
 	rejectService := initRejectService(cfg, logger)
 	rejectService.Config = specs.RejectConfig{
-		DryRun: dryRun,
+		DryRun:          dryRun,
+		RejectThreshold: cfg.GetRejectThreshold(),
 	}
 
 	// Handle single file testing
@@ -57,6 +58,7 @@ func main() {
 
 	logger.Info("starting rejection job",
 		"interval", cfg.GetRejectInterval(),
+		"threshold", cfg.RejectThreshold,
 		"dry_run", dryRun,
 		"pid", os.Getpid())
 
@@ -76,7 +78,10 @@ func main() {
 			logger.Info("rejection job stopped")
 			return
 		case <-ticker.C:
-			logger.Info("starting periodic rejection iteration")
+			logger.Info("rejecting stale specs",
+				"threshold", cfg.RejectThreshold,
+				"dry_run", dryRun,
+			)
 			if err := rejectService.RejectAllStaleSpecs(ctx); err != nil {
 				logger.Error("spec rejection failed", "error", err)
 			}
