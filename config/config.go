@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 	"unicode"
+
+	"google.golang.org/api/drive/v3"
 )
 
 type Config struct {
@@ -26,7 +28,23 @@ type Config struct {
 	GoogleOAuthClientID     string `env:"required"`
 	GoogleOAuthClientSecret string `env:"required"`
 
-	SyncInterval string `env:"default:1h"`
+	GoogleClientID    string `env:"default:112404606310881291739"`
+	GoogleClientEmail string `env:"default:specs-reader@roadmap-270011.iam.gserviceaccount.com"`
+	GoogleProjectID   string `env:"default:roadmap-270011"`
+
+	SyncInterval          string `env:"default:1h"`
+	SyncGoogleDriveScopes string `env:"default:readonly"`
+
+	RejectInterval          string `env:"default:24h"`
+	RejectThreshold         string `env:"default:4380h"` // 6 months
+	RejectGoogleDriveScopes string `env:"default:full"`
+}
+
+// scopeAliases maps short names to full Google Drive scope URLs
+var scopeAliases = map[string]string{
+	"readonly": drive.DriveReadonlyScope,
+	"full":     drive.DriveScope,
+	"file":     drive.DriveFileScope,
 }
 
 func (c *Config) IsProduction() bool {
@@ -47,6 +65,44 @@ func (c *Config) GetSyncInterval() time.Duration {
 		panic(err)
 	}
 	return d
+}
+
+func (c *Config) GetRejectInterval() time.Duration {
+	d, err := time.ParseDuration(c.RejectInterval)
+	if err != nil {
+		panic(err)
+	}
+	return d
+}
+
+func (c *Config) GetRejectThreshold() time.Duration {
+	d, err := time.ParseDuration(c.RejectThreshold)
+	if err != nil {
+		panic(err)
+	}
+	return -d
+}
+
+func (c *Config) GetSyncGoogleDriveScopes() []string {
+	return parseScopes(c.SyncGoogleDriveScopes)
+}
+
+func (c *Config) GetRejectGoogleDriveScopes() []string {
+	return parseScopes(c.RejectGoogleDriveScopes)
+}
+
+// parseScopes converts comma-separated scope names to full URLs.
+// Supports aliases (readonly, full, file) and full URLs.
+func parseScopes(scopesStr string) []string {
+	result := make([]string, 0)
+	for _, s := range strings.Split(scopesStr, ",") {
+		scope, ok := scopeAliases[strings.TrimSpace(s)]
+		if ok {
+			result = append(result, scope)
+		}
+	}
+
+	return result
 }
 
 func MustLoadConfig() *Config {

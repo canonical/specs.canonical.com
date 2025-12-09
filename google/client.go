@@ -19,12 +19,12 @@ type Google struct {
 }
 
 type Config struct {
-	ClientID          string
-	ClientEmail       string
-	ClientX509CertURL string
-	PrivateKey        string
-	PrivateKeyID      string
-	ProjectID         string
+	ClientID     string
+	ClientEmail  string
+	PrivateKey   string
+	PrivateKeyID string
+	ProjectID    string
+	Scopes       []string
 }
 
 // NewGoogleDrive creates a new GoogleDrive client
@@ -33,7 +33,7 @@ func NewGoogleDrive(config Config) (*Google, error) {
 		Email:        config.ClientEmail,
 		PrivateKey:   []byte(config.PrivateKey),
 		PrivateKeyID: config.PrivateKeyID,
-		Scopes:       []string{drive.DriveReadonlyScope},
+		Scopes:       config.Scopes,
 		TokenURL:     google.JWTTokenURL,
 	}
 

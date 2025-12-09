@@ -31,6 +31,7 @@ tasks:
       - go build -o bin/api cmd/api/main.go
       - go build -o bin/sync cmd/sync/main.go
       - go build -o bin/migrate cmd/migrate/main.go
+      - go build -o bin/reject cmd/reject/main.go
 
   run:
     description: "Run the application"
@@ -43,6 +44,14 @@ tasks:
     deps: ["tools", "build"]
     cmds:
       - go run cmd/sync/main.go
+
+  run_reject:
+    description: "Run the rejection worker"
+    deps: ["tools", "build"]
+    cmds:
+      - go run cmd/reject/main.go --dry-run --google-doc-id={{.DOC_ID}}
+    vars:
+      DOC_ID: '{{default "" .DOC_ID}}'
 
   dev:
     description: "Run the application in watch mode"

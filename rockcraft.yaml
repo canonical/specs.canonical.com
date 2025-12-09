@@ -20,6 +20,12 @@ services:
     command: /usr/bin/specs-sync
     environment:
       SYNC_INTERVAL: 30m
+  go-reject:
+    override: replace
+    startup: enabled
+    command: /usr/bin/specs-reject
+    environment:
+      REJECT_INTERVAL: 24h
 
 parts:
   go-build:
@@ -55,6 +61,8 @@ parts:
 
       install -D -m755 ./bin/api ${CRAFT_PART_INSTALL}/opt/specs/bin/api
       install -D -m755 ./bin/sync ${CRAFT_PART_INSTALL}/opt/specs/bin/sync
+      install -D -m755 ./bin/reject ${CRAFT_PART_INSTALL}/opt/specs/bin/reject
     organize:
       opt/specs/bin/api: usr/bin/specs-api
       opt/specs/bin/sync: usr/bin/specs-sync
+      opt/specs/bin/reject: usr/bin/specs-reject
