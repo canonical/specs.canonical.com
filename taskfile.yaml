@@ -10,7 +10,8 @@ vars:
   PATH_CHARM: "./charm/charm_amd64.charm"
   IMAGE: "specs.canonical.com:latest"
   APP_NAME: "specs"
-  ROCK: "canonical-specs-v2_2.0.0_amd64.rock"
+  ROCK:
+    sh: ls -t canonical-specs-v2_*.rock 2>/dev/null | head -1 || echo "canonical-specs-v2_*.rock"
 
 tasks:
   install_bun:
