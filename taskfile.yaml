@@ -6,6 +6,12 @@ dotenv:
 
 interval: "500ms"
 
+vars:
+  PATH_CHARM: "./charm/charm_amd64.charm"
+  IMAGE: "specs.canonical.com:latest"
+  APP_NAME: "specs"
+  ROCK: "canonical-specs-v2_2.0.0_amd64.rock"
+
 tasks:
   install_bun:
     description: "Install bun"
@@ -88,3 +94,25 @@ tasks:
     cmds:
       - echo "Building the UI..."
       - cd ui && bun install  && bun run build
+
+  # Juju tasks
+  clean-imgs:
+    desc: Clean all local images
+    cmds:
+      - microk8s ctr images list | grep 'localhost:32000/specs' | awk '{print $1}' | xargs -r microk8s ctr images remove
+  load-img:
+    desc: Load .rock image into local registry
+    cmds:
+      - rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false oci-archive:{{.ROCK}} docker://localhost:32000/{{.IMAGE}}
+  deploy:
+    desc: Deploy the charm to microk8s
+    cmds:
+      - juju deploy {{.PATH_CHARM}} {{.APP_NAME}} --resource app-image=localhost:32000/{{.IMAGE}}
+  refresh:
+    desc: Refresh the charm in microk8s
+    cmds:
+      - juju refresh {{.APP_NAME}} --path {{.PATH_CHARM}} --resource app-image=localhost:32000/{{.IMAGE}}
+  ssh:
+    desc: SSH into the worker container
+    cmds:
+      - juju ssh --container app {{.APP_NAME}}/0 bash
