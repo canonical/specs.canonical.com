@@ -1,6 +1,6 @@
 name: canonical-specs-v2
 
-version: "2.0.0"
+version: "3.0.0"
 summary: Canonical specifications
 description: |
   The Google sync and UI service for Canonical specifications.
@@ -14,13 +14,13 @@ services:
     override: replace
     command: /usr/bin/specs-api
     startup: enabled
-  go-scheduler:
+  sync-scheduler:
     override: replace
     startup: enabled
     command: /usr/bin/specs-sync
     environment:
       SYNC_INTERVAL: 30m
-  go-reject:
+  reject-scheduler:
     override: replace
     startup: enabled
     command: /usr/bin/specs-reject

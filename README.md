@@ -84,12 +84,18 @@ services:
     override: replace
     command: /usr/bin/specs-api
     startup: enabled
-  go-scheduler:
+  sync-scheduler:
     override: replace
     startup: enabled
     command: /usr/bin/specs-sync
     environment:
       SYNC_INTERVAL: 30m
+  reject-scheduler:
+    override: replace
+    startup: enabled
+    command: /usr/bin/specs-reject
+    environment:
+      REJECT_INTERVAL: 24h
 ```
 
 ### Sync Process
