@@ -11,7 +11,7 @@ vars:
   IMAGE: "specs.canonical.com:latest"
   APP_NAME: "specs"
   ROCK:
-    sh: ls -t canonical-specs-v2_*.rock 2>/dev/null | head -1 || echo "canonical-specs-v2_*.rock"
+    sh: ls -t canonical-specs-v2_*.rock 2>/dev/null | head -1
 
 tasks:
   install_bun:
@@ -104,7 +104,12 @@ tasks:
   load-img:
     desc: Load .rock image into local registry
     cmds:
-      - rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false oci-archive:{{.ROCK}} docker://localhost:32000/{{.IMAGE}}
+      - |
+        if [ -z "{{.ROCK}}" ]; then
+          echo "ERROR: image could not be loaded. Check that you have packed rock!"
+          exit 1
+        fi
+        rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false oci-archive:{{.ROCK}} docker://localhost:32000/{{.IMAGE}}
   deploy:
     desc: Deploy the charm to microk8s
     cmds:
