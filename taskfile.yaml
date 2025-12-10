@@ -99,7 +99,7 @@ tasks:
   clean-imgs:
     desc: Clean all local images
     cmds:
-      - microk8s ctr images list | grep 'localhost:32000/specs' | awk '{print $1}' | xargs -r microk8s ctr images remove
+      - microk8s ctr images list | grep 'localhost:32000/{{.APP_NAME}}' | awk '{print $1}' | xargs -r microk8s ctr images remove
   load-img:
     desc: Load .rock image into local registry
     cmds:
