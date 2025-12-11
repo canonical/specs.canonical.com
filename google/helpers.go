@@ -220,7 +220,18 @@ func (g *Google) DocumentFirstTable(ctx context.Context, fileID string) ([][]str
 	return result, nil
 }
 
-// AddDocComment adds a comment to the given Google Doc.
+// AddDocComment adds a comment to the specified Google Doc.
+//
+// Parameters:
+//   - ctx: The context for the request.
+//   - fileID: The ID of the Google Doc to which the comment will be added.
+//   - content: The text content of the comment to add.
+//
+// This function requires the drive.DriveScope permission to create comments
+// (drive.DriveReadonlyScope is not sufficient).
+//
+// Returns an error if the comment cannot be created, for example due to
+// permission issues, an invalid fileID, or network problems.
 func (g *Google) AddDocComment(ctx context.Context, fileID, content string) error {
 	_, err := g.DriveService.Comments.
 		Create(fileID, &drive.Comment{Content: content}).

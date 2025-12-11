@@ -33,8 +33,10 @@ func NewGoogleDrive(config Config) (*Google, error) {
 		Email:        config.ClientEmail,
 		PrivateKey:   []byte(config.PrivateKey),
 		PrivateKeyID: config.PrivateKeyID,
-		Scopes:       []string{drive.DriveScope},
-		TokenURL:     google.JWTTokenURL,
+		// NOTE: Full Drive scope is required (instead of DriveReadonlyScope) to support AddDocComment functionality,
+		// which needs write access to add comments to documents. This expands the permission surface area.
+		Scopes:   []string{drive.DriveScope},
+		TokenURL: google.JWTTokenURL,
 	}
 
 	tokenSource := jwtConfig.TokenSource(context.Background())

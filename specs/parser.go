@@ -58,13 +58,13 @@ func (s *SyncService) Parse(ctx context.Context, logger *slog.Logger, workerItem
 		SyncedAt:           time.Now(),
 	}
 
+	var warnings []string
+
 	// Fallback when the file title doesn't contain "ID - Title".
 	if newSpec.ID == "" {
 		newSpec.ID = file.File.Id
-		if err = s.GoogleClient.AddDocComment(ctx, newSpec.GoogleDocID,
-			"This spec is missing an ID in the document title. Please rename to 'ID - Title' format."); err != nil {
-			logger.Debug("failed to add doc comment", "err", err)
-		}
+		warnings = append(warnings,
+			"This spec is missing an ID in the document title. Please rename to 'ID - Title' format.")
 		logger.Warn("specId missing; using GoogleDocID as fallback",
 			"docId", file.File.Id, "name", file.File.Name)
 	}
@@ -79,16 +79,16 @@ func (s *SyncService) Parse(ctx context.Context, logger *slog.Logger, workerItem
 		return fmt.Errorf("metadata table is empty")
 	}
 
-	var warnings []string
 	if isColumnFormat(specsMetadataTable) {
 		parseColumnBasedMetadata(specsMetadataTable, &newSpec, &warnings)
 	} else {
 		parseRowBasedMetadata(specsMetadataTable, &newSpec)
 	}
 
-	for _, msg := range warnings {
-		if err := s.GoogleClient.AddDocComment(ctx, newSpec.GoogleDocID, msg); err != nil {
-			logger.Debug("failed to add doc comment", "err", err)
+	if len(warnings) > 0 {
+		combinedMsg := strings.Join(warnings, "\n")
+		if err := s.GoogleClient.AddDocComment(ctx, newSpec.GoogleDocID, combinedMsg); err != nil {
+			logger.Warn("failed to add doc comment", "err", err)
 		}
 	}
 
@@ -251,9 +251,9 @@ func parseColumnBasedMetadata(table [][]string, spec *db.Spec, warnings *[]strin
 			if warnings != nil {
 				*warnings = append(*warnings, fmt.Sprintf(
 					"Invalid reviewers entry in row %d: %q. Please use one reviewer per row.",
-					idx+5, reviewer))
-				continue
+					idx+6, reviewer))
 			}
+			continue
 		}
 		if len(reviewer) > 4 {
 			reviewers = append(reviewers, db.Reviewer{
