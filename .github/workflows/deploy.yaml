@@ -17,6 +17,9 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write
+
 ## See ~/.vaultrc in your Juju model
 ## Environment variables:
 # WEBSITE_URL (url)
