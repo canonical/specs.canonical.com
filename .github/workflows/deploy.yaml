@@ -18,7 +18,7 @@ on:
       - main
 
 permissions:
-  contents: write
+  contents: read
 
 ## See ~/.vaultrc in your Juju model
 ## Environment variables:
@@ -70,6 +70,8 @@ jobs:
           fi
 
   rockcraft-pack:
+    permissions:
+      packages: write
     runs-on:
       [self-hosted, self-hosted-linux-amd64-jammy-private-endpoint-medium]
     needs: commit-check
