@@ -9,7 +9,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/labstack/echo/v4 v4.12.0
 	github.com/lib/pq v1.10.9
-	golang.org/x/oauth2 v0.24.0
+	golang.org/x/oauth2 v0.27.0
 	google.golang.org/api v0.209.0
 	gorm.io/driver/postgres v1.5.10
 	gorm.io/gorm v1.25.12
