@@ -17,7 +17,7 @@ func (s *SyncService) Parse(ctx context.Context, logger *slog.Logger, workerItem
 
 	logger.Debug("processing file")
 
-	parts := strings.SplitN(file.File.Name, "-", 2)
+	parts := strings.SplitN(file.File.Name, " - ", 2)
 	var specId, specTitle string
 	if len(parts) == 2 {
 		specId, specTitle = strings.TrimSpace(parts[0]), strings.TrimSpace(parts[1])
