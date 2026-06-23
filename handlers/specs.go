@@ -132,12 +132,16 @@ func (s *Server) ListSpecs(c echo.Context) error {
 			searchConfig,
 		)
 
-		query = query.Where(fmt.Sprintf("%s @@ %s", vectorExpr, queryExpr), req.SearchQuery)
+		textFilter := s.DB.Where(
+			fmt.Sprintf("%s @@ %s", vectorExpr, queryExpr), req.SearchQuery,
+		)
 
 		// also add ilike query for the same search fields
 		for _, field := range searchFields {
-			query = query.Or(fmt.Sprintf("%s ILIKE ?", field), "%"+req.SearchQuery+"%")
+			textFilter = textFilter.Or(fmt.Sprintf("%s ILIKE ?", field), "%"+req.SearchQuery+"%")
 		}
+
+		query = query.Where(textFilter)
 	}
 
 	var total int64
