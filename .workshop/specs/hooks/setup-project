@@ -1,0 +1,28 @@
+#!/bin/bash
+set -euo pipefail
+
+/project/scripts/reset-db.sh
+
+# Add GOPATH to the system-wide profile.
+# Needed because we install Go via snap rather than
+# Workshop SDK, which normally handles this.
+# If we don't do this, executables installed by
+# "go install" won't be found in the PATH.
+# We do this system-wide so it also applies to root shells (e.g. "sudo -i").
+GOBIN_DIR="$(go env GOPATH)/bin"
+echo "export PATH=\"$GOBIN_DIR:\$PATH\"" | sudo tee /etc/profile.d/go-path.sh > /dev/null
+export PATH="$GOBIN_DIR:$PATH"
+
+# Install Bun for the workshop user (its installer targets $HOME).
+if ! command -v bun > /dev/null 2>&1; then
+  curl -fsSL https://bun.sh/install | bash
+fi
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
+# Add Bun to the system-wide profile so it is on the PATH for all shells,
+# including non-interactive ones that skip ~/.bashrc.
+echo "export PATH=\"$BUN_INSTALL/bin:\$PATH\"" | sudo tee /etc/profile.d/bun-path.sh > /dev/null
+
+# Install project dependencies and tools.
+task tools
+go mod download

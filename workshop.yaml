@@ -1,0 +1,19 @@
+name: specs
+base: ubuntu@24.04
+sdks:
+  - name: project-specs
+  - name: system
+    plugs:
+      web:
+        interface: tunnel
+        endpoint: localhost:3000
+      db:
+        interface: tunnel
+        endpoint: localhost:5445
+actions:
+  task: |
+    task "$@"
+  go:
+    go "$@"
+  bun:
+    bun "$@"

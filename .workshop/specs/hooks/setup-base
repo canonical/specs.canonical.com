@@ -1,0 +1,16 @@
+#!/bin/bash
+set -euo pipefail
+
+export DEBIAN_FRONTEND=noninteractive
+
+apt-get update
+apt-get install -y build-essential time postgresql postgresql-client make jq curl unzip
+
+# We use snaps instead of workshop SDKs to better match rockcraft and CI
+# workflows.
+snap install go --channel=1.23/stable --classic
+
+# Task (taskfile.dev) is the task runner used by this project.
+snap install task --classic
+
+# Bun is installed per-user in setup-project (its installer targets $HOME).

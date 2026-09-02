@@ -1,0 +1,8 @@
+name: specs
+slots:
+  web:
+    interface: tunnel
+    endpoint: localhost:3000
+  db:
+    interface: tunnel
+    endpoint: localhost:5432
