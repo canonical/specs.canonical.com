@@ -72,6 +72,11 @@ tasks:
     cmds:
       - go run cmd/migrate/main.go
 
+  reset-db:
+    description: "Reset the database (recreate local dev credentials)"
+    cmds:
+      - ./scripts/reset-db.sh
+
   ### UI tasks
   generate_types:
     description: "Generate types"
